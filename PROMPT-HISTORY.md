@@ -99,3 +99,19 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Method notes:** I didn't repeat the earlier DNR endpoint or link tests. The TIGER zip was downloaded to its own scratchpad folder, and only its metadata and DBF header and rows were read in memory, with nothing extracted or executed. Vertex counts and areas come from EPSG:4326 query output (approximate planar deg²).
 - **Not done:** the other M0a rows (federal lands, PAD-US, county/municipal hunts, taxonomy, written-permission wording, provider docs). Codex verification is pending. Nothing installed, provisioned, migrated, or committed.
 - **Next:** pending your call on accepting the published iMAP and Census grants. Otherwise the remaining M0a research rows.
+
+### 6. [Claude] Rev 4 correction: header, reuse basis, metadata preservation
+
+- **Asked:** Documentation-only fix to `project-plan.md`:
+  - Header to revision 4, with repo state taken from actual Git history.
+  - Drop "pending user acceptance" as the reuse blocker. Record the exact published terms as the proposed basis, with compliance conditions and the genuinely open interpretations.
+  - Require an unmodified copy of source metadata alongside imports, plus retained attribution, without assuming a catalog link satisfies metadata preservation.
+- **Redirection:** entry 5's "Next" (waiting on the user to accept the grants) is superseded. The published terms are now the proposed basis, not a pending approval.
+- **Done (plan only):**
+  - **Header:** revision 4. Repo state from `git log` / `git ls-files`: commits `02e2da6`, `eaff8e8`, `d771662`, and 5 tracked files. It previously said "No commits beyond the initial one", which was wrong.
+  - **"Pending acceptance" wording removed:** D7, §3.3 rows (DNR lands, counties, places), §3.4 reuse rows, and §3.4 import step 6 now point to §3.6.
+  - **New §3.6:** verbatim iMAP `licenseInfo` and Census TIGER/Line use constraints, each marked by the scope verified. Compliance conditions R1–R8 (R1: byte-for-byte metadata copies with URL, time, and SHA-256 per `ImportRun`; a hyperlink alone is not treated as sufficient). Open interpretations U1–U5: what counts as "distributed", which artifact is "the metadata entry", whether DNR web pages are covered (their terms not reviewed), Gazetteer coverage, and the county item's full license text.
+  - **§6.2 update strategy:** now stores the metadata and terms copies with each run.
+  - **Change log:** a correction note added under rev 4.
+- **Verified:** the git commits and tracked files were read directly. The iMAP terms quote comes from the item JSON saved in the scratchpad on 2026-10-30. The TIGER quote comes from the metadata XML in the already-downloaded 2025 zip. No new network research, and the county item's full license text was not fetched (recorded as U5).
+- **Not done:** nothing installed, migrated, or committed. The other M0a rows and the Codex verification are still pending.
