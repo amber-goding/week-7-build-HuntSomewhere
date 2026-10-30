@@ -1,3 +1,5 @@
+import { SiteHeader } from "./site-header";
+
 const audiences = [
   {
     title: "For hunters",
@@ -16,13 +18,7 @@ const audiences = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-border">
-        <div className="mx-auto flex w-full max-w-5xl items-center px-4 py-4 sm:px-6">
-          <span className="text-lg font-semibold tracking-tight text-forest dark:text-cream">
-            HuntSomewhere
-          </span>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="flex-1">
         <section className="bg-forest text-cream">

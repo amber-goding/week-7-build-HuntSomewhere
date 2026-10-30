@@ -17,6 +17,9 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Explicit `prisma db seed` only. jiti (a pinned devDependency) loads
+    // the TypeScript seed and the generated client.
+    seed: "node --import jiti/register prisma/seed.ts",
   },
   ...(directUrl ? { datasource: { url: directUrl } } : {}),
 });

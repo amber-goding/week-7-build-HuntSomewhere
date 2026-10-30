@@ -376,3 +376,54 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Not done / not proven:** no application records written (persistence through the app is unproven), no Vercel deploy. No install-script approvals or installs. Nothing committed.
 - **Plan:** rev 12 (header, §4.2 `DataSource` marked migrated, M1 row, §3.3 integration-checks row, change log).
 - **Next:** prove application-record persistence: a minimal server-side write and read of a real `DataSource` row (the iMAP DNR source with its verbatim terms), with approval for the write. Then the Vercel deploy and a check that the row survives a redeploy.
+
+### 16. [Claude] M1 (partial): genuine `DataSource` seed + read-only `/sources` page
+
+- **Asked:** The user approved inserting exactly one genuine `DataSource` row (MD iMAP DNR Owned Lands), slug `md-imap-dnr-owned-lands`, using the official catalog URL and the exact terms from the plan, verified against recorded evidence.
+  - A repeatable seed: create if absent, no-op if equal, stop and report differing field names if different. Never overwrite, never touch other rows. Run it, then re-run to prove idempotency.
+  - A read-only `/sources` page via `lib/db.ts`, with escaped text, empty and sanitized error states, a request-time read inside `<Suspense>` (Cache Components), and a working landing-page link.
+  - No schema change, migration, installs, deploy, commit, public write endpoints, or seeding during render, install, or build.
+- **Context:** branch `feat/app-foundation`, clean at `4c0616a`.
+- **Payload verification:**
+  - The plan's §3.6 quote **== raw `licenseInfo`** in the catalog JSON captured 2026-10-30 (`scratchpad/m0a/item_a5.json`), exactly: 881 chars, no HTML, no edge whitespace, ASCII only, SHA-256 `2555e9bc…94da`.
+  - From the same JSON: id `a5de633b…`, owner `mdimapdatacatalog`, access public, title "Maryland Protected Lands - DNR Owned Properties and Conservation Easements", `accessInformation` "MD iMAP, DNR".
+  - **Values:** name = catalog item title (the stored URL is that item's page; the layer name is "DNR Owned Lands and Conservation Easements"), url = `https://www.arcgis.com/home/item.html?id=a5de633b6ebf450b94dcb08b519c3414`, attribution = "MD iMAP, DNR", reuseTerms = verbatim.
+- **Seed design (`prisma/seed.ts`):**
+  - Refuses to write unless SHA-256(reuseTerms) equals the recorded hash.
+  - `findUnique` by slug → `create` if absent. A P2002 race leads to a re-read and compare. Otherwise it compares name / url / attribution / reuseTerms and reports differing **field names** only, never updating. Exit codes: 0 created/unchanged, 2 conflict, 1 error.
+  - Errors are printed as class or Prisma code only. Uses `DATABASE_URL_UNPOOLED` from `.env.local` (dotenv) with `PrismaNeon`, and calls `$disconnect()` in `finally`.
+  - **Runner:** `prisma.config.ts` → `migrations.seed: "node --import jiti/register prisma/seed.ts"`, and `npm run db:seed` → `prisma db seed`. **Caveat:** `jiti` 2.7.0 is only a **transitive** dependency (via prisma's `@prisma/config`, eslint, and `@tailwindcss/node`). It's not declared in `package.json`, so a future upgrade could drop it. Adding `jiti` or `tsx` as an explicit devDependency needs user approval.
+- **Seed results (2026-10-30):**
+  - Run 1: `md-imap-dnr-owned-lands: created`.
+  - Runs 2 and 3: `unchanged`.
+  - A read-only snapshot before and after runs 2–3 was **identical**: 1 total row, 1 with the slug, same `created_at` = `updated_at` (13:46:19.517Z), same row fingerprint, and terms hash matching.
+  - **Conflict path:** a temporary seed copy with only `name` changed printed "differs in name; nothing was changed", exit 2, and the row was unchanged (same fingerprint). The temporary copy and snapshot script were deleted.
+- **Page and UI:**
+  - `app/sources/page.tsx`: a static shell (header, title, intro) + `<Suspense>` around `SourcesList`, which calls `await connection()` (outside try/catch) and then `getPrisma().dataSource.findMany` with public fields only, ordered by name.
+  - Text is rendered as React children (auto-escaped). There's no `dangerouslySetInnerHTML`. Links are rendered only for `http(s)` URLs.
+  - Empty state: "No data sources have been added yet." Error state: "Sources couldn't be loaded right now." Only the error class is logged.
+  - `app/site-header.tsx`: shared header with Home and **Sources** links, used by `/` and `/sources`.
+- **Verified:**
+  - lint 0, typecheck 0.
+  - **Build 0 with `DATABASE_URL` overridden to an unreachable `.invalid` host:** `/sources` reported as ◐ Partial Prerender, and **0 DB access attempts during build** (no "sources: failed to load" in the build log).
+  - Production server, port 3109, real env: `/sources` shows the name, attribution, official link href, and the full terms with HTML-escaped quotes. No error text, no connection string or Neon host in the HTML.
+  - Port 3110, unreachable DB: the sanitized error message is shown, the fake host and credentials are absent from the HTML and the server log (which logged `sources: failed to load unknown`), and no source data is shown.
+  - The landing page has `href="/sources"`. Both servers were stopped. The user's dev server on 3000 was untouched.
+  - `git diff --check` 0.
+- **Not done:** no deploy, so persistence across a redeploy is unproven. No schema change or migration. Nothing committed. Plan rev 13 (header with 11 commits, §4.2 `DataSource` seeded, M1 row, §3.3 integration-checks row, change log).
+- **Next:** Vercel deploy (connect the Neon project via the Neon-managed integration, set env vars), then verify `/sources` in production and that the row survives a redeploy.
+
+### 17. [Claude] Pin `jiti` as a direct devDependency
+
+- **Asked:** On `feat/app-foundation`, add `jiti` as a direct devDependency, pinned to the version the seed already used. Update `package.json`, `package-lock.json`, and the `prisma.config.ts` comment. No `npm ci` or `node_modules` removal while the dev server runs. No unrelated script approvals or version changes. Re-run the seed (expect "unchanged"), then lint, typecheck, build, and `git diff --check`. No record changes, migrations, deploy, or commit.
+- **Context:** this resolves entry 16's caveat that `jiti` was only transitive. Installed version: **2.7.0** (deduped under `@prisma/config`→`c12`, `eslint`, `@tailwindcss/node`). The user's dev server was listening on :3000 (pid 33424), so only an additive `npm install` was used. `npm view jiti@2.7.0` shows no pre/install/postinstall scripts.
+- **Done:**
+  - `npm install --save-dev --save-exact jiti@2.7.0` reported "up to date, audited 484 packages".
+  - Diffs against pre-install snapshots:
+    - `package.json`: +`"jiti": "2.7.0"` in devDependencies only;
+    - `package-lock.json`: +`"jiti": "2.7.0"` in the root package's devDependencies only;
+    - resolved `npm ls --all` tree: the only change is that `/jiti` 2.7.0 now appears top-level, and **no other package was added, removed, or changed version**.
+  - `prisma.config.ts` comment now reads "jiti (a pinned devDependency)". Snapshots deleted.
+- **Verified:** `npm run db:seed` → `md-imap-dnr-owned-lands: unchanged` (exit 0). lint 0, typecheck 0, build 0 (`/` static, `/sources` ◐ partial prerender), `git diff --check` 0.
+- **Not done:** no record change, migration, deploy, or commit. Plan rev 14 (header, change log).
+- **Next:** unchanged: Vercel deploy, then verify `/sources` in production and persistence across a redeploy.
