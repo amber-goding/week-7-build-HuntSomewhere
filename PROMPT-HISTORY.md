@@ -115,3 +115,12 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
   - **Change log:** a correction note added under rev 4.
 - **Verified:** the git commits and tracked files were read directly. The iMAP terms quote comes from the item JSON saved in the scratchpad on 2026-10-30. The TIGER quote comes from the metadata XML in the already-downloaded 2025 zip. No new network research, and the county item's full license text was not fetched (recorded as U5).
 - **Not done:** nothing installed, migrated, or committed. The other M0a rows and the Codex verification are still pending.
+
+### 7. [Codex] Instruction-discovery verification
+
+- **Asked:** Read `AGENTS.md` and every referenced project instruction, verify instruction discovery only, report the required project and workflow facts, and record the verification in the plan and this shared history. No research, installs, application code, migrations, or commits.
+- **Context:** Codex received the repo-root `AGENTS.md` as its instruction entry point. It points to `CLAUDE.md`, `project-plan.md`, and this file without duplicating their contents.
+- **Decision:** Claude's `prompt-history` skill named in `CLAUDE.md` is not available to Codex. Codex used the documented equivalent in `AGENTS.md`: re-read this existing file immediately before appending, match the established entry format, and tag the heading `[Codex]`. No second history file was created.
+- **Done:** Read all four instruction and planning files in full. Updated `project-plan.md` to revision 5, marked Codex discovery verified in §1 and §3.3, documented the Claude-specific logging equivalent, removed the pending-verification wording from the M0a status and milestone row, and added the revision-5 change-log entry.
+- **Verified:** Project is HuntSomewhere. The plan is `project-plan.md`; the shared log is `PROMPT-HISTORY.md`, using numbered session entries with agent-tagged headings and labeled bullets. Approval rules remain: explicit user approval before any package install, migration, or commit; milestones end with acceptance evidence, review, logging, and an approval stop. Current milestone is M0a, still in progress because other research rows remain open. No research, packages, application code, migrations, or commits were performed.
+- **Next:** Continue the remaining M0a research only when the user requests it.

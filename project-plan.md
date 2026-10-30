@@ -1,8 +1,8 @@
 # HuntSomewhere — Project Plan
 
-Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and a proposed `AGENTS.md` (§1).
+Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and `AGENTS.md` (§1).
 
-**Last updated:** 2026-10-30 (revision 4) · **Repo state (from `git log` / `git ls-files`, 2026-10-30):** three commits on `main`: `02e2da6` "Initial commit", `eaff8e8` "docs: define HuntSomewhere scope and implementation plan", `d771662` "docs: record Maryland data sources and agent instructions". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. This revision-4 correction isn't committed yet.
+**Last updated:** 2026-10-30 (revision 5) · **Repo state (from `git log` / `git ls-files`, 2026-10-30):** three commits on `main`: `02e2da6` "Initial commit", `eaff8e8` "docs: define HuntSomewhere scope and implementation plan", `d771662` "docs: record Maryland data sources and agent instructions". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. This revision-5 verification isn't committed yet.
 
 ### Status vocabulary
 
@@ -25,9 +25,10 @@ Decision labels: **[APPROVED]** = decided by the user · **[PROPOSED DEFAULT]** 
 | Agent | Expected entry point | Then reads |
 |---|---|---|
 | Claude Code | `CLAUDE.md` | `project-plan.md`, `PROMPT-HISTORY.md`, and the `prompt-history` skill as `CLAUDE.md` directs |
-| Codex | `AGENTS.md` at repo root **[VERIFY]**: Codex's documented convention. M0a confirms it by opening Codex in this repo. | `CLAUDE.md`, `project-plan.md`, `PROMPT-HISTORY.md` |
+| Codex | `AGENTS.md` at repo root **[VERIFIED 2026-10-30]**: discovered in this repo when Codex opened it. | `CLAUDE.md`, `project-plan.md`, `PROMPT-HISTORY.md` |
 
-- [AGENTS.md](AGENTS.md) (created 2026-10-30) points to the three files above and contains no copied rules or plan content. **Whether Codex actually reads it is pending verification** (§3.3).
+- [AGENTS.md](AGENTS.md) (created 2026-10-30) points to the three files above and contains no copied rules or plan content. **Verified 2026-10-30:** Codex discovered it at repo root and read all three referenced files before making changes (§3.3).
+- `CLAUDE.md` names Claude's `prompt-history` skill. That Claude-specific skill is not available to Codex, so Codex uses the documented equivalent in `AGENTS.md`: re-read the existing `PROMPT-HISTORY.md` immediately before each append, match its entry format, and tag the heading `[Codex]`. No duplicate history file is created.
 - **Observed 2026-10-30, this machine only:** `~/.codex` contained no `AGENTS.md`, and its `skills` directory listing was empty. This can change, and it says nothing about other machines. Rely on the repo-level `AGENTS.md`, not on any global configuration.
 - **One prompt history.** `AGENTS.md` tells Codex to append to the **same** `PROMPT-HISTORY.md` using the entry format already in that file, re-reading it before each write, and tagging entries `[Codex]`. Claude tags its entries `[Claude]`. There is no second history file.
 - Rules live in `CLAUDE.md`, the plan lives here, and `AGENTS.md` only points to them.
@@ -149,10 +150,10 @@ Allowed writes: `AGENTS.md`, this file, `PROMPT-HISTORY.md`.
 | Species and method taxonomy | M0a | Not yet researched | — | — |
 | MD written-permission wording | M0a | Not yet researched | — | — |
 | Provider docs D1–D5, D9 | M0a | Not yet researched | — | — |
-| Codex reads `AGENTS.md` | M0a | **Pending.** `AGENTS.md` created 2026-10-30. Not verified until Codex is opened in the repo and reports reading it. | — | — |
+| Codex reads `AGENTS.md` | M0a | **Verified (2026-10-30).** Codex discovered the repo-root `AGENTS.md`, then read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full before work. Claude's `prompt-history` skill is unavailable to Codex; Codex followed the equivalent logging workflow documented in `AGENTS.md`. | Codex report in this session; `PROMPT-HISTORY.md` entry 7 | Keep one shared history file; Codex entries use `[Codex]`. |
 | Integration checks (§3.2) | M1–M9 | Not started | — | — |
 
-**M0a status:** in progress. Done: `AGENTS.md` created, DNR/iMAP public data, county boundaries, town/place reference. Still open: the other M0a rows and the Codex verification.
+**M0a status:** in progress. Done: `AGENTS.md` created and its Codex discovery verified, DNR/iMAP public data, county boundaries, town/place reference. Still open: the other M0a rows.
 
 **Reading these findings.** Each source is evaluated on four separate questions, and a "yes" on one never implies the others:
 1. **HTTP availability:** did the endpoint return the expected format on the date checked?
@@ -640,7 +641,7 @@ Each milestone ends with: acceptance checks run and recorded, the diff reviewed 
 
 | # | Milestone | Tier | Est. (h) | Depends on | Acceptance checks |
 |---|---|---|---|---|---|
-| **M0a** | **Read-only feasibility + `AGENTS.md`** (§3.1). *In progress: `AGENTS.md` created and the DNR/iMAP data check done (§3.4); other rows open; Codex verification pending.* | P | 1.5–2.5 | — | §3.1 exit criteria. Codex result recorded. |
+| **M0a** | **Read-only feasibility + `AGENTS.md`** (§3.1). *In progress: `AGENTS.md` created and Codex discovery verified; the DNR/iMAP data check is done (§3.4); other rows remain open.* | P | 1.5–2.5 | — | §3.1 exit criteria. Codex result recorded. |
 | M0b | **Account provisioning support**: user creates accounts as each milestone approaches (§2.3). Agent documents setup steps and env-var names. | P | 0.5–1 | M0a | `.env.example` lists names only (no values). Each provider's integration check runs in its milestone. |
 | M1 | **Skeleton + deploy:** Next.js/TS, Prisma, Neon, theme, production deploy | P | 1.5–2.5 | M0a; Neon + hosting accounts | Neon/hosting integration check (§3.2). Data survives a redeploy. *Install + migration approval points.* `.env*` gitignored, and no secrets in Git or the client bundle. |
 | M2 | **Auth + profiles + roles** | P | 1.5–2.5 | M1; auth account | Auth integration check. A signup payload containing a role is ignored (test). A non-admin gets 403 on admin routes, and a non-location-reviewer gets 403 on location review (tests). |
@@ -767,6 +768,7 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
 
 ## 11. Change log
 
+- 2026-10-30, rev 5: Codex instruction discovery verified. Recorded that Codex found the repo-root `AGENTS.md` and read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full. Documented the existing `[Codex]` logging workflow as the equivalent for Claude's unavailable `prompt-history` skill; no duplicate history file was created. M0a remains in progress because the other research rows are still open.
 - 2026-10-30, rev 1: initial plan by Claude from the user's brief.
 - 2026-10-30, rev 2: user-requested correction pass. M0 split into read-only research plus per-milestone integration checks. AI NL→filters moved onto the critical path before signing, with ≥3 real testers. Totals recalculated as provisional. Single versioned listing review with a scoped location reviewer. Immutable agreement snapshots and amendments. Three separate document status fields with atomic finalization. Separate document-access tokens and defined guest-signer view. Email outbox with idempotency ahead of signing. App-enforced AI budget, quote-level citation validation, and acceptance checks for all four AI features. Conservative handling of ambiguous search input and distance bounds. Isolated demo flow with an authenticated demo-only fallback. Unverified provider and machine claims reworded as [VERIFY] or dated observations.
 - 2026-10-30, rev 3: M0a started. `AGENTS.md` created (Codex verification pending). DNR/iMAP public-data findings recorded (§3.3–3.4): the iMAP `MD_ProtectedLands` layer 0 WMA subset is the initial source, the DNR Hunting Atlas service was not found, the dataset doesn't identify hunting access, and reuse terms aren't explicit. Implementation cautions C1–C3 added, with fixes to §4.3 (immutable versions, hash-bound approvals), §6.5 (retry-stable token links), and §6.6 (timeouts count as spent).
