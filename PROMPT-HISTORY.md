@@ -427,3 +427,97 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Verified:** `npm run db:seed` → `md-imap-dnr-owned-lands: unchanged` (exit 0). lint 0, typecheck 0, build 0 (`/` static, `/sources` ◐ partial prerender), `git diff --check` 0.
 - **Not done:** no record change, migration, deploy, or commit. Plan rev 14 (header, change log).
 - **Next:** unchanged: Vercel deploy, then verify `/sources` in production and persistence across a redeploy.
+
+### 18. [Claude] Read-only pre-merge review: `feat/app-foundation` vs `origin/main` (logged retroactively)
+
+- **Asked:** Read-only review of the branch against `origin/main` before merging. Covered blocking correctness issues, exposed secrets, dependency and configuration problems, and consistency with M1. Confirm migrations and seeding don't run during builds. Never print credentials. No edits, installs, DB writes, deploy, commit, or merge. Separate checks done now from earlier results. Optional improvements kept separate.
+- **Context:** This entry wasn't written at the time because the user had asked for no file edits. It's recorded now at the user's request (entry 19).
+- **Checks performed then (2026-10-30):**
+  - `git ls-remote` confirmed local refs matched the remote (`main` `d910c3e`, branch `183d206`). The branch was 5 ahead, 0 behind, clean tree.
+  - Full code and config diff read (21 files, lockfile and history log scanned separately).
+  - Secrets: `.env.example` is the only env file ever committed. Pattern scan of branch patches found 0 matches. Real `.env.local` values: 0 hits in tracked files, all Git history, and the local `.next/static` bundle (counts only).
+  - No automatic migrate or seed: the only lifecycle hook is `postinstall: prisma generate`. No `vercel.json` or other build hook. No write, seed, or migrate calls in app code.
+  - `prisma migrate status` up to date. `migrate diff --from-config-datasource --to-schema --exit-code`: "No difference detected."
+  - `db:validate`, `prisma format --check`, lint, typecheck: all 0.
+  - Build 0 with `DATABASE_URL` overridden to an unreachable host, with 0 DB access during the build.
+  - `npm audit --omit=dev`: 0 vulnerabilities.
+- **Result:** no blocking findings. Ready to merge, with deployment and persistence across a redeploy unverified.
+- **Pre-merge caution:** if a hosting project auto-deploys `main`, set `DATABASE_URL` there first.
+- **Optional findings:**
+  1. Stale plan header.
+  2. No `engines` field (Prisma 7.10.1 Node ranges), and `@types/node` `^20`.
+  3. `postinstall` depends on the `prisma` devDependency.
+  4. An unhandled `$disconnect()` error path in `prisma/seed.ts`.
+  5. Schema comment examples differ from the seeded values.
+- **Not done:** no files changed, nothing installed, written, deployed, committed, or merged.
+
+### 19. [Claude] Handoff checkpoint: merged to `main`, Railway deployment, plan reconciliation
+
+- **Asked:** Documentation-only handoff before clearing the session.
+  - The user reports that `feat/app-foundation` was fast-forward merged and pushed to `main` at `183d206`, that **Railway** now deploys `main` successfully, and that live `/sources` shows the existing Neon record after a redeploy. Hosting is Railway, replacing Vercel.
+  - Inspect Git, correct stale plan status, record the evidence, and reconcile M1 acceptance without assuming completion. Create `HANDOFF.md`, log entry 18 and this one, and run `git diff --check`.
+  - No app code, installs, migrations, seeds, external services, commit, or push.
+- **Git state (inspected, `git log` / `status` / `ls-remote`):** current branch `main`, clean tree. `main`, `origin/main`, and `feat/app-foundation` (local and remote) are all at `183d206`, with 12 commits. This is consistent with the user's fast-forward report.
+- **Redirection:** hosting decision changed from **Vercel → Railway** (user). Vercel research is kept as history and not deleted. Railway itself wasn't researched (out of scope).
+- **Plan changes (revision 15):**
+  - **Header:** corrected the stale repo state (review finding 1).
+  - **§2.1:** hosting is Railway (approved).
+  - **D4:** decided Railway, superseding Vercel, with Railway unknowns listed.
+  - **D5:** flagged that the Vercel Blob OIDC proposal needs re-deciding.
+  - **§2.3:** M1 action marked done (user-reported), with the original text kept. M4 storage action re-pointed to D5.
+  - **§3.2:** "Scheduled jobs" flagged for Railway.
+  - **§3.3:** integration row records the user-reported Railway evidence.
+  - **§3.9:** superseded note.
+  - **New §3.10:** a table of Vercel assumptions to revisit (Hobby terms, daily cron and outbox/reminders, Neon–Vercel integration and preview branches, Vercel Blob OIDC, R7 preview deploys, Node version, Clerk origins and redirects). Placed after §3.9's M0a table. It was first inserted mid-§3.9 by mistake and moved before finishing.
+  - **M1 row:** the stale "Not done: Vercel deploy…" replaced with the reconciliation.
+  - **Gate evidence:** production deployment noted.
+  - **Change log:** rev 15.
+- **M1 reconciliation:**
+  - **Met:** approval points; `.env*` ignored and no secrets in Git or the *local* bundle (agent-verified; the Railway build output wasn't scanned); data survives a redeploy (user-reported).
+  - **Unmet as worded:** §3.2 "Deployed page reads and writes a row". The deployed page only reads, and the row came from the local seed, with no write path by design. This needs a user decision (amend the criterion, or approve a write path).
+  - **M1 stays partial.**
+- **`HANDOFF.md` created:**
+  - purpose and authoritative-file links;
+  - branch and commit;
+  - implemented features and versions;
+  - migration and seeded record;
+  - agent-verified vs. user-reported evidence;
+  - Railway notes and env-var **names only** (`DATABASE_URL` runtime, `DATABASE_URL_UNPOOLED` CLI-only);
+  - M1 status, open decisions, review findings, gotchas, Vercel-revisit summary;
+  - the proposed next M2 task.
+- **Proposed next task (M2, small):** Clerk sign-in foundation on the development instance, local only. Prerequisites: confirm D1 given Clerk's owned-domain requirement for production, approve a pinned `@clerk/nextjs` install, and put Clerk dev keys in `.env.local`. Scope: `proxy.ts` + `clerkMiddleware()`, `ClerkProvider`, sign-in and sign-up routes, a header control, public `/` and `/sources`, `auth()` readers in `<Suspense>`. No DB models, roles, production instance, or Railway changes.
+- **Verified:** `git diff --check` (see the final report). No app code, packages, migrations, seeds, external services, commit, or push.
+- **Next:** user review of this handoff. Then a decision on the M1 write criterion and D1, before starting the M2 task.
+
+### 20. [Claude] Docs correction: M1 criterion amended (M1 complete), no automatic auth fallback
+
+- **Asked:** Two documentation-only corrections in `project-plan.md` and `HANDOFF.md`:
+  1. The user **approved amending** M1's persistence criterion to "An approved seed writes a persistent row; the deployed page reads it after redeployment". Record it as satisfied by existing evidence, preserve the later requirement for user-facing create/read, and mark M1 complete only if every other criterion is met.
+  2. **Remove the automatic Clerk → Neon Auth fallback.** Clerk remains proposed. Re-verify its current production requirements before implementation, and discuss any blocker before changing providers. Don't present unverified Google-verification or domain requirements as settled.
+
+  Update history, run `git diff --check`. No app changes, installs, DB operations, commits, or pushes.
+- **Redirection:** this resolves entry 19's open M1 decision (the user chose to amend the criterion). It also withdraws the rev-7 proposal that M2 auto-switches to Neon Auth when no domain is available.
+- **M1 criteria check (done before marking complete):**
+  - (1) Neon/hosting, amended: the approved seed's write is agent-verified (entry 16), and the deployed read after redeploy is user-reported (entry 19). **Met.**
+  - (2) Data survives a redeploy: user-reported. **Met.**
+  - (3) Install and migration approval points: **met** (entries 11, 12, 15).
+  - (4) `.env*` ignored, and no secrets in Git or the client bundle: **met**, agent-verified in entry 18 on a local production build of the same app code. Railway's build output wasn't scanned, which is stated.
+  - Result: **M1 complete.**
+- **`project-plan.md` (revision 16):**
+  - Header revision.
+  - §3.2: the pass condition is replaced with the amended criterion, keeping the original wording and the note that user-facing create/read remains required (M4, M7).
+  - §9 M1 row: the "Unmet as worded… stays partial" text is replaced by a per-criterion reconciliation and **M1 complete**.
+  - D1: "PROPOSED: Clerk", no automatic fallback, Neon Auth as an alternative only, re-verify before M2.
+  - §2.3 M2 row: domain, DNS, and Google statements relabeled "as read 2026-10-30, unverified".
+  - §3.3 provider row and §3.9 auth section: added a status note that the table reflects docs as read; "fallback" → "alternative"; "Cost of choosing Clerk" marked unverified; the "Decision rule" replaced with "no automatic fallback; discuss blockers with the user".
+  - Env table: Neon Auth vars → "only if the user chooses Neon Auth".
+  - §3.10 Clerk row and R9 reworded.
+  - Change log: rev 16. Earlier change-log entries (rev 7, rev 15) are kept as history.
+- **`HANDOFF.md`:**
+  - Plan revision 16, history entries 18–20.
+  - "M1 status: complete" section, with the amended criterion, per-criterion evidence, and the preserved later requirement.
+  - D1 bullet rewritten: proposed, no automatic fallback, requirements unverified.
+  - "M1 write criterion" open-decision bullet removed.
+  - M2 prerequisite 1 is now "re-verify Clerk's current production requirements; discuss blockers before considering another provider".
+- **Verified:** `git diff --check` (including `HANDOFF.md`) — see the final report. Leftover-wording scans only match historical change-log lines, the intentional quote of the original criterion, and the new "no automatic fallback" text. No app code, installs, DB operations, commits, or pushes.
+- **Next:** user review. Then the M2 task (Clerk development instance, local only), after re-verifying Clerk's production requirements and approving the pinned `@clerk/nextjs` install.

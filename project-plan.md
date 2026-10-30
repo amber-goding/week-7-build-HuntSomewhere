@@ -2,7 +2,7 @@
 
 Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and `AGENTS.md` (§1).
 
-**Last updated:** 2026-10-30 (revision 14) · **Repo state (from `git log` / `git status`, 2026-10-30):** branch `feat/app-foundation`; 11 commits, latest `4c0616a` "feat: add DataSource model and initial migration". **Uncommitted:** idempotent seed (`prisma/seed.ts`, `db:seed`, `jiti` 2.7.0 pinned devDependency), `/sources` page, shared site header, and revisions 13–14 docs. **Neon:** migration `20261030133412_init_data_sources` applied; one genuine `data_sources` row seeded 2026-10-30.
+**Last updated:** 2026-10-30 (revision 16) · **Repo state (from `git log` / `git status` / `git ls-remote`, 2026-10-30):** `feat/app-foundation` fast-forward merged into `main` and pushed by the user; `main`, `origin/main`, and `feat/app-foundation` all at `183d206` "feat: seed official data source and display source attribution" (12 commits). Working tree clean before revision 15. **Uncommitted:** revisions 15–16 docs and `HANDOFF.md`. **Hosting:** Railway deploys `main` (user-reported). **Neon:** migration `20261030133412_init_data_sources` applied; one genuine `data_sources` row (`md-imap-dnr-owned-lands`).
 
 ### Status vocabulary
 
@@ -57,6 +57,7 @@ Decision labels: **[APPROVED]** = decided by the user · **[PROPOSED DEFAULT]** 
 - **Reconfirmation:** every 30 days. Hidden after a configurable grace period.
 - **Signing:** in-app permission-document signing by the authorized property representative and every participating adult hunter. Accountless adults sign via email links.
 - **Minors:** owners may describe youth opportunities. Minor participation requests are deferred.
+- **Hosting: Railway** (user decision, 2026-10-30). Railway deploys `main`. This replaces the earlier Vercel recommendation (D4); the Vercel-specific findings in §3.9 are kept as history, and §3.10 lists what needs revisiting.
 - **Full scope is kept.** The presentation shows what genuinely works. The launch may follow the presentation.
 
 ### 2.2 Unresolved dependencies and proposed defaults
@@ -65,11 +66,11 @@ Provider and library choices are **candidates**. Their capabilities are **[VERIF
 
 | # | Item | Status | Proposed default | Must be confirmed |
 |---|---|---|---|---|
-| D1 | Auth provider | **RECOMMENDED (docs reviewed 2026-10-30, §3.9)** | **Clerk.** Fallback: Neon Auth if a domain you own isn't available by M2. Auth.js is dropped (it isn't a managed provider). | Production instance needs a domain you own, DNS records, and your own Google OAuth client (§3.9). Integration check in M2. |
+| D1 | Auth provider | **PROPOSED: Clerk** (docs reviewed 2026-10-30, §3.9). No automatic fallback provider: changing providers requires a discussion with the user. | **Clerk.** Neon Auth remains a documented alternative only. Auth.js is dropped (it isn't a managed provider). | **Re-verify against current official Clerk docs before implementing M2** (§3.9 statements are as read 2026-10-30, not settled requirements). Any blocker is discussed with the user before changing providers. As read 2026-10-30, the docs mentioned an owned domain, DNS records, and a custom Google OAuth client for production. Integration check in M2. |
 | D2 | Maps and tiles | PROPOSED (brief review, §3.9). Setup deferred to M3. | MapLibre GL JS + MapTiler | MapTiler Free: "personal, or non-commercial use", logo required, service pauses at the monthly limit. Commercial terms and key domain restriction to be checked in M3. |
 | D3 | Email provider | PROPOSED (brief review, §3.9). Setup deferred to M9. | Resend | `resend.dev` sends only to the account owner's address, so a verified domain is needed. `Idempotency-Key` header, kept 24 h. Free: 100/day, 3,000/month. |
-| D4 | Hosting | **RECOMMENDED (docs reviewed 2026-10-30, §3.9)** | **Vercel**, Hobby for build and presentation | Hobby is "non-commercial, personal use only" (a launch decision). Hobby cron runs at most once per day with ±59 min precision. Function max duration 300 s. |
-| D5 | Photo and document storage | **UNRESOLVED — not in approved stack; needs approval.** Recommendation changed after docs review (§3.9). | **Vercel Blob, private store** (authenticated reads served through our functions, OIDC credentials by default). Fallback: Cloudflare R2 / AWS S3 with presigned URLs. | Private stores serve no public URL. The access mode can't be changed after creation. Setup deferred to M4. |
+| D4 | Hosting | **DECIDED (user, 2026-10-30): Railway.** The earlier recommendation (Vercel, docs reviewed 2026-10-30, §3.9) is superseded. | Railway, deploying `main` | Not yet researched for Railway: plan terms (commercial use), Node version used by the build, scheduled-job/worker options (§6.5, M9, M12), and preview/branch environments (R7). See §3.10. |
+| D5 | Photo and document storage | **UNRESOLVED — not in approved stack; needs approval.** Recommendation changed after docs review (§3.9). | **Vercel Blob, private store** (authenticated reads served through our functions, OIDC credentials by default). Fallback: Cloudflare R2 / AWS S3 with presigned URLs. | Private stores serve no public URL. The access mode can't be changed after creation. Setup deferred to M4. **Revisit for Railway (§3.10):** Vercel Blob's default OIDC credentials assume Vercel hosting; off-Vercel use relies on `BLOB_READ_WRITE_TOKEN`. Re-decide before M4. |
 | D6 | Geospatial approach | PROPOSED | lat/lng columns + haversine SQL. Display geometry as simplified GeoJSON. PostGIS deferred. | Whether Prisma + Neon handle this adequately; whether PostGIS is needed for county-polygon bounds (§6.1) |
 | D7 | County and town reference data | PROPOSED (sources researched 2026-10-30, §3.5) | Counties: iMAP Political Boundaries – County Boundaries (24 county-equivalents, including Baltimore City). Towns: Census TIGER/Line places for Maryland (incorporated places + CDPs). | Reuse basis and compliance conditions in §3.6. Inspect the 2026 TIGER place file and its terms before adopting it. County-line tolerance set in M4. |
 | D8 | Reconfirmation grace period | **UNRESOLVED (user decision)** | Placeholder 14 days in config | Not blocking. Only the value is open. |
@@ -87,10 +88,10 @@ Provider and library choices are **candidates**. Their capabilities are **[VERIF
 
 | Needed for | Action | Lead-time note |
 |---|---|---|
-| M1 | Neon project (or Vercel Marketplace Neon integration), Vercel account | — |
-| M2 | Clerk account. **A domain you own** for the Clerk production instance, with DNS access. A Google Cloud OAuth client set to "In production" publishing status. | Clerk: DNS "can take up to 48 hours". Google requires verification of app name, logo, and scopes before "In production". **Start the domain and Google steps during M1.** The same domain can later serve email (M9). |
+| M1 | Neon project; Railway service deploying `main` with its environment variables set | **Done (user-reported, 2026-10-30).** Original entry: "Neon project (or Vercel Marketplace Neon integration), Vercel account". |
+| M2 | Clerk account and development keys. **Production prerequisites to be confirmed:** the Clerk docs read 2026-10-30 mentioned an owned domain with DNS access and a Google OAuth client in "In production" status. | Unverified lead times (as read 2026-10-30): Clerk said DNS "can take up to 48 hours", and its Google guide described Google verifying app name, logo, and scopes. **Re-verify against current official Clerk docs before implementing M2** (§3.9 statements are as read 2026-10-30, not settled requirements). Any blocker is discussed with the user before changing providers. |
 | M3 | Map tile key | — |
-| M4 | Vercel Blob private store connected to the project (after D5 approval) | Access mode is fixed at creation, so create it as **private** |
+| M4 | Storage per D5 (Vercel Blob private store was proposed under Vercel hosting; re-decide for Railway, §3.10) | Access mode is fixed at creation, so create it as **private** |
 | M6 | OpenAI API key; review the account's available spending controls | — |
 | M9 | Resend account and the **verified sending domain** (can reuse the M2 domain) | Domain verification can take time. Nothing before M9 waits on it. |
 
@@ -128,13 +129,13 @@ Allowed writes: `AGENTS.md`, this file, `PROMPT-HISTORY.md`.
 
 | Check | Milestone | Pass condition |
 |---|---|---|
-| Neon connection + hosting deploy | M1 | Deployed page reads and writes a row |
+| Neon connection + hosting deploy | M1 | An approved seed writes a persistent row; the deployed page reads it after redeployment. *(Amended by the user 2026-10-30. Originally "Deployed page reads and writes a row". User-facing create/read remains required in later product milestones, e.g. M4 listings and M7 access requests.)* |
 | Auth | M2 | Google and email/password sign-in both work locally and in production |
 | Maps | M3 | Restricted key renders Maryland tiles locally and in production |
 | Storage | M4 | Private upload. Presigned read works, then expires. A direct public URL is denied. |
 | OpenAI | M6 | Server-side structured-output call returns schema-valid JSON. Usage fields are read for budget accounting. |
 | Email | M9 | Message from the verified domain delivered to a non-owner inbox. Idempotency behavior observed (§6.5). |
-| Scheduled jobs | M9 | A scheduled job runs in production (needed for retries and reminders) |
+| Scheduled jobs | M9 | A scheduled job runs in production (needed for retries and reminders). **Revisit for Railway (§3.10).** |
 
 ### 3.3 Findings
 
@@ -149,9 +150,9 @@ Allowed writes: `AGENTS.md`, this file, `PROMPT-HISTORY.md`.
 | Town / place reference | M0a | **Working download found (2026-10-30).** Census TIGER/Line 2025 Maryland places: 536 places (157 incorporated + 379 CDPs) with internal points. Explicit Census use statement in the file's metadata. | §3.5, §3.6 | Recommended: Census TIGER/Line places (state 24). Reuse: published TIGER/Line use constraint is the proposed basis (§3.6). |
 | Species and method taxonomy | M0a | **Researched (2026-10-30)** from DNR's *2026–2027 Guide to Hunting & Trapping in Maryland* (a DNR Wildlife and Heritage Service publication, hosted by eRegulations; pages last updated 2026-09-30 to 2026-10-14) and DNR's sika deer page. **White-tailed and sika deer are separate** (separate bag limits, a Sika Deer Stamp, different "antlered" definitions, sika concentrated on the lower Eastern Shore). The guide names eight deer device categories, and rifles and handguns are split by cartridge type with area restrictions. | §3.7 | Recommended filter values and ambiguous-term handling in §3.7. No season-eligibility engine. |
 | MD written-permission requirement | M0a | **Researched (2026-10-30).** Natural Resources §10-411(a) (2026 session text): no one may come to hunt on another person's land "without the written permission of the landowner or the landowner's agent or lessee". **§10-411 does not specify** the form, content, carrying, or electronic signatures. DNR's 2026–2027 guide repeats the requirement for all counties. | §3.8 | Explicit requirements are kept separate from product choices in §3.8. **No claim that our e-signing workflow satisfies the statute.** Legal review is still required. |
-| Provider docs D1–D5, D9 | M0a | **Reviewed (2026-10-30, docs only).** Hosting: Vercel (Hobby is non-commercial only, daily cron only). DB: Neon + Prisma 7 with `DATABASE_URL` / `DATABASE_URL_UNPOOLED` and `@prisma/adapter-neon`, scale-to-zero after 5 min. Auth: Clerk (production needs a domain you own and your own Google OAuth client), Neon Auth fallback. Storage: Vercel Blob private store (new option). Maps / email / AI: brief review only. | §3.9 | D1, D4 recommended. D2, D3, D9 setup deferred to M3, M9, M6. D5 still needs approval. |
+| Provider docs D1–D5, D9 | M0a | **Reviewed (2026-10-30, docs only).** Hosting: Vercel (Hobby is non-commercial only, daily cron only). DB: Neon + Prisma 7 with `DATABASE_URL` / `DATABASE_URL_UNPOOLED` and `@prisma/adapter-neon`, scale-to-zero after 5 min. Auth: Clerk proposed (docs as read mentioned an owned domain and a custom Google OAuth client for production; unverified, re-verify before M2). Neon Auth is an alternative only, with no automatic fallback. Storage: Vercel Blob private store (new option). Maps / email / AI: brief review only. | §3.9 | D1, D4 recommended. D2, D3, D9 setup deferred to M3, M9, M6. D5 still needs approval. |
 | Codex reads `AGENTS.md` | M0a | **Verified (2026-10-30).** Codex discovered the repo-root `AGENTS.md`, then read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full before work. Claude's `prompt-history` skill is unavailable to Codex; Codex followed the equivalent logging workflow documented in `AGENTS.md`. | Codex report in this session; `PROMPT-HISTORY.md` entry 7 | Keep one shared history file; Codex entries use `[Codex]`. |
-| Integration checks (§3.2) | M1–M9 | **Neon connectivity: passed (2026-10-30, read-only).** `SELECT 1` passed on the pooled URL, the direct URL, and the Prisma 7 client with `PrismaNeon` on the pooled URL. Both URLs point at the same endpoint after removing the `-pooler` suffix, with the same database and role, and `sslmode=require`. **First migration applied (2026-10-30):** `20261030133412_init_data_sources` on PostgreSQL 18.6, `migrate status` up to date, table, columns, PK, and unique slug index verified read-only. **Application record (2026-10-30):** one `data_sources` row written by the seed and read back by `/sources` locally. **Not yet proven:** persistence across a deployed redeploy, hosting deploy, auth / maps / storage / AI / email checks. | PROMPT-HISTORY entry 13 | `connect_timeout` is not set on both URLs (recommended in §3.9, not required). Prisma CLI commands that connect were not exercised. |
+| Integration checks (§3.2) | M1–M9 | **Hosting (user-reported, 2026-10-30, not agent-verified):** Railway deploys `main` at `183d206`, and the live `/sources` page shows the existing Neon source record after a redeploy. **Neon connectivity: passed (2026-10-30, read-only).** `SELECT 1` passed on the pooled URL, the direct URL, and the Prisma 7 client with `PrismaNeon` on the pooled URL. Both URLs point at the same endpoint after removing the `-pooler` suffix, with the same database and role, and `sslmode=require`. **First migration applied (2026-10-30):** `20261030133412_init_data_sources` on PostgreSQL 18.6, `migrate status` up to date, table, columns, PK, and unique slug index verified read-only. **Application record (2026-10-30):** one `data_sources` row written by the seed and read back by `/sources` locally. **Not yet proven:** persistence across a deployed redeploy, hosting deploy, auth / maps / storage / AI / email checks. | PROMPT-HISTORY entry 13 | `connect_timeout` is not set on both URLs (recommended in §3.9, not required). Prisma CLI commands that connect were not exercised. |
 
 **M0a status:** in progress. Done: `AGENTS.md` created and its Codex discovery verified, DNR/iMAP public data, county boundaries, town/place reference, species and method taxonomy, written-permission requirement. Provider docs for framework setup (hosting, DB, auth) are done. Still open, **all deferred and none blocking M1/M2** (§3.9): DNR website terms (U3, before M3), federal hunting lands, PAD-US, county/municipal hunts, and full storage/maps/email/AI checks in their milestones.
 
@@ -449,6 +450,8 @@ L1: Does an electronic record or electronic signature satisfy "written permissio
 
 ### 3.9 Provider documentation review (2026-10-30)
 
+> **Hosting superseded (2026-10-30):** the user chose **Railway**. The Vercel findings below are kept as history and no longer describe the deployment. See §3.10.
+
 These findings come from reading current official documentation only. No accounts were created and nothing was installed or provisioned. "Doc date" is the page's own last-updated stamp where one is shown. Otherwise it's "no date shown", and the content was read on 2026-10-30. Anything not observed in those docs stays **[VERIFY]** for that milestone's integration check (§3.2).
 
 #### Framework setup (M1–M2): recommended
@@ -474,9 +477,11 @@ These findings come from reading current official documentation only. No account
 | Connecting to Vercel | Three options: Vercel-managed Marketplace integration (single Vercel bill), Neon-managed integration (existing Neon account), or manual env vars. **Both integrations auto-create preview-deployment branches. Manual doesn't.** The env-var names the integrations set aren't stated on the overview page, so they're **[VERIFY] in M1** against the two names above. | `https://neon.com/docs/guides/vercel-overview` (no date shown) |
 | Migrations | Still require explicit user approval (§1). | — |
 
-**Authentication (D1): Clerk recommended, Neon Auth fallback.**
+**Authentication (D1): Clerk proposed; Neon Auth documented as an alternative only.**
 
-| | **Clerk (recommended)** | Neon Auth (fallback) |
+> **Status of this table:** every statement below is as read in each provider's docs on 2026-10-30. None of them is a settled requirement. **Re-verify against current official Clerk docs before implementing M2** (§3.9 statements are as read 2026-10-30, not settled requirements). Any blocker is discussed with the user before changing providers.
+
+| | **Clerk (proposed)** | Neon Auth (alternative, not a fallback) |
 |---|---|---|
 | Google + email/password | Google via SSO connections. Email/password via dashboard settings ([VERIFY] toggles in M2). | Email/password via `auth.signUp.email()`. Google via OAuth setup (Neon's OAuth guide URL returned 404 on 2026-10-30, so **[VERIFY]**). |
 | Dev vs. production Google | Development uses Clerk's shared credentials. **Production needs your own Google OAuth client.** Google apps start in "Testing" (up to 100 test users), and "In production" status requires Google to verify the app name, logo, and scopes. | Production checklist: create your own Google OAuth app to "replace shared development keys". |
@@ -492,9 +497,9 @@ These findings come from reading current official documentation only. No account
 - It sends its own auth emails, so M2 doesn't depend on M9.
 - Its Next.js 16 integration is explicit.
 
-**Cost of choosing Clerk:** a domain you own plus DNS lead time, and Google's production verification. Both should start during M1.
+**Possible cost of choosing Clerk (unverified, as read 2026-10-30):** a domain you own plus DNS lead time, and Google's production verification. Confirm both against current docs before M2 implementation.
 
-**Decision rule [PROPOSED]:** if no domain is available by the start of M2, use Neon Auth instead, with verification **codes** (which work with the shared SMTP) and record the switch. Auth.js is dropped because it isn't a managed provider.
+**Provider changes (user decision, 2026-10-30):** there is **no automatic fallback**. The earlier rule "if no domain is available by the start of M2, use Neon Auth" is withdrawn. If re-verification surfaces a blocker (for example, a domain or Google verification requirement), it is discussed with the user before any provider change. Auth.js is dropped because it isn't a managed provider.
 
 #### Environment-variable names (names only; values never committed)
 
@@ -504,7 +509,7 @@ These findings come from reading current official documentation only. No account
 | `DATABASE_URL_UNPOOLED` | server (CLI, migrations) | Neon / integration | M1 |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | client (publishable by design) | Clerk | M2 |
 | `CLERK_SECRET_KEY` | server only | Clerk | M2 |
-| `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` | server | Neon Auth | M2, **fallback only** |
+| `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` | server | Neon Auth | Only if the user chooses Neon Auth |
 | `BLOB_STORE_ID` (+ `VERCEL_OIDC_TOKEN`, `BLOB_WEBHOOK_PUBLIC_KEY`, set automatically) | server | Vercel when a store is connected | M4 |
 | `BLOB_READ_WRITE_TOKEN` | server, **only** for off-Vercel code or client-upload tokens | Vercel | M4 if needed |
 | Map key (name chosen in M3) | client (domain-restricted) | MapTiler | M3 |
@@ -535,6 +540,20 @@ App-defined (not provider) variables, like the AI kill switch, budget caps, and 
 | Federal hunting lands, PAD-US, county/municipal hunts | No | **Deferred.** They expand public-data coverage after the M3 WMA import (§3.4). Coverage stays labeled as not complete. |
 
 **M0a is not complete.** The deferred rows above stay open. None of them block M1 or M2.
+
+### 3.10 Hosting change: Vercel assumptions to revisit (recorded 2026-10-30)
+
+The user moved hosting to Railway. Railway has **not** been researched in this project, so each item below is open, not answered. Revisit each one before or within the milestone named.
+
+| Assumption made for Vercel | Where | Revisit by |
+|---|---|---|
+| Hobby plan "non-commercial, personal use only"; function max 300 s | D4, §3.9 | Launch decision (check Railway plan terms) |
+| Cron at most daily on Hobby → email outbox processed after commit + manual retry; daily reconfirmation reminders | §6.5, §3.2 "Scheduled jobs", M9, M12 | Before M9 (Railway cron or worker options) |
+| Neon ↔ Vercel Marketplace integration and per-preview database branches | §3.9, §2.3 | Not applicable. Railway variables are set directly. Decide whether preview environments need their own Neon branch. |
+| Vercel Blob private store with OIDC credentials (`BLOB_STORE_ID`, `VERCEL_OIDC_TOKEN`) | D5, §3.9 env table, §2.3 M4 | Before M4 (re-decide storage provider) |
+| "Make the live change on a branch or preview deployment" | R7 | Before the presentation (Railway preview/PR environments) |
+| Node version from Vercel project settings; no `engines` in `package.json` (Prisma 7.10.1 needs ^20.19 / ^22.12 / ≥24) | Branch review | Next infra touch (confirm Railway's Node version, or pin `engines`) |
+| Clerk production prerequisites (owned domain? as read 2026-10-30, unverified); OAuth redirect and authorized origins were planned around the Vercel URL | D1, §2.3 M2 | M2 (the Railway URL or a custom domain) |
 
 ---
 
@@ -891,7 +910,7 @@ Each milestone ends with: acceptance checks run and recorded, the diff reviewed 
 |---|---|---|---|---|---|
 | **M0a** | **Read-only feasibility + `AGENTS.md`** (§3.1). *In progress: `AGENTS.md` created and Codex discovery verified; the DNR/iMAP data check is done (§3.4); other rows remain open.* | P | 1.5–2.5 | — | §3.1 exit criteria. Codex result recorded. |
 | M0b | **Account provisioning support**: user creates accounts as each milestone approaches (§2.3). Agent documents setup steps and env-var names. | P | 0.5–1 | M0a | `.env.example` lists names only (no values). Each provider's integration check runs in its milestone. |
-| M1 | **Skeleton + deploy:** Next.js/TS, Prisma, Neon, theme, production deploy. *Partial (2026-10-30): Next.js 16.4.3 foundation + landing page; Prisma 7.10.1 configured (`prisma.config.ts` loads `.env.local`, empty PostgreSQL schema, `prisma-client` generator, server-only lazy client in `lib/db.ts`, `.env.example`). validate / generate / lint / typecheck / build pass without credentials. Neon read-only connectivity verified 2026-10-30 (pooled, direct, Prisma adapter `SELECT 1`). First migration `20261030133412_init_data_sources` (`data_sources` table) applied to Neon (PostgreSQL 18.6) via `prisma migrate deploy`; schema verified read-only. One genuine `DataSource` row seeded idempotently; `/sources` reads it at request time through `lib/db.ts` (verified on a local production server). Not done: Vercel deploy, persistence across redeploy, remaining integration checks.* | P | 1.5–2.5 | M0a; Neon + hosting accounts | Neon/hosting integration check (§3.2). Data survives a redeploy. *Install + migration approval points.* `.env*` gitignored, and no secrets in Git or the client bundle. |
+| M1 | **Skeleton + deploy:** Next.js/TS, Prisma, Neon, theme, production deploy. *Partial (2026-10-30): Next.js 16.4.3 foundation + landing page; Prisma 7.10.1 configured (`prisma.config.ts` loads `.env.local`, empty PostgreSQL schema, `prisma-client` generator, server-only lazy client in `lib/db.ts`, `.env.example`). validate / generate / lint / typecheck / build pass without credentials. Neon read-only connectivity verified 2026-10-30 (pooled, direct, Prisma adapter `SELECT 1`). First migration `20261030133412_init_data_sources` (`data_sources` table) applied to Neon (PostgreSQL 18.6) via `prisma migrate deploy`; schema verified read-only. One genuine `DataSource` row seeded idempotently; `/sources` reads it at request time through `lib/db.ts` (verified on a local production server). Hosting changed to Railway. **User-reported (2026-10-30, not agent-verified):** Railway deploys `main` at `183d206`, and live `/sources` shows the seeded record after a redeploy. **Acceptance (reconciled 2026-10-30):** (1) Neon/hosting check: **met** under the user-amended criterion "An approved seed writes a persistent row; the deployed page reads it after redeployment". The approved seed wrote `md-imap-dnr-owned-lands`, and per the user report the deployed `/sources` reads it after redeployment. (2) Data survives a redeploy: **met** (user-reported). (3) Install and migration approval points: **met**. (4) `.env*` gitignored and no secrets in Git or the client bundle: **met**, agent-verified on a local production build of the same app code (the Railway build output was not scanned). **M1 complete (2026-10-30).** User-facing create/read functionality remains a requirement of later product milestones (M4, M7).* | P | 1.5–2.5 | M0a; Neon + hosting accounts | Neon/hosting integration check (§3.2). Data survives a redeploy. *Install + migration approval points.* `.env*` gitignored, and no secrets in Git or the client bundle. |
 | M2 | **Auth + profiles + roles** | P | 1.5–2.5 | M1; auth account | Auth integration check. A signup payload containing a role is ignored (test). A non-admin gets 403 on admin routes, and a non-location-reviewer gets 403 on location review (tests). |
 | M3 | **Public data + browse:** WMA import per §3.4, split map/list, area detail | P | 2.5–3.5 | M1, M0a source; map key | Maps integration check. `ImportRun` recorded. Detail shows source, dates, and notice. No area shows "hunting confirmed" without a recorded DNR-page quote and date (test). A non-JSON or maintenance response fails the run (test). Coverage statement uses real counts. Usable at phone width. |
 | M4 | **Listings + versioned review:** editor, `ListingVersion`, classification, general + location review, approximate placement + bucket, photos, demo seed | P | 3–4.5 | M2; storage (D5 approved) | Storage integration check. Ordinary edit publishes immediately. Location, rules, or authority edit keeps the old version live until all scopes approve. A general admin can't see private location values (test). A public DTO contains no private fields (test). Exact point outside the declared county is flagged. EXIF stripped (test). |
@@ -942,7 +961,7 @@ Arithmetic, P: low 1.5+0.5+1.5+1.5+2.5+3+2+2+2.5+1+1.5 = 19.5; high 2.5+1+2.5+2.
 | Database persistence | M1 redeploy check, M4 version lifecycle, M7 snapshots |
 | Reliable AI | M6 recorded eval, ambiguity, failure-path, and concurrency results (M13 adds more) |
 | Real-user testing | M8: ≥3 testers, notes recorded |
-| Production deployment | M1 onward |
+| Production deployment | M1 onward. Railway deploy of `main` user-reported 2026-10-30. |
 | Reviewed diffs | Cross-agent or user review per milestone, noted in `PROMPT-HISTORY.md` |
 | Small commits | Approved commits per milestone |
 | One caught agent mistake | Logged in `PROMPT-HISTORY.md` with the diff and the fix |
@@ -966,7 +985,7 @@ Arithmetic, P: low 1.5+0.5+1.5+1.5+2.5+3+2+2+2.5+1+1.5 = 19.5; high 2.5+1+2.5+2.
 | R4 Scope exceeds time | Ordered reductions above. Honest status labels. |
 | R5 AI slow or failing live | M6 evals and failure paths, kill switch, manual search always works. |
 | R6 Database connection or cold-start issues | Neon Free scales to zero after 5 min idle (§3.9). Use the pooled `DATABASE_URL` with `connect_timeout=15`. Warm the app before presenting. |
-| R9 Clerk production blocked by domain / DNS / Google verification lead time | Start the domain, DNS, and Google OAuth steps during M1 (§2.3). If no domain by M2, use the Neon Auth fallback (§3.9 decision rule). |
+| R9 Clerk production prerequisites (possibly an owned domain, DNS, Google verification; unverified) add lead time | Re-verify current Clerk production requirements before M2 implementation. Raise any blocker with the user before changing providers (no automatic fallback). |
 | R7 Live change breaks the demo | Make it on a branch or preview deployment, never directly on production. |
 | R8 Private location leak | Allowlist DTOs, prompt-builder and DTO tests (M4, M6), location-reviewer scoping. |
 
@@ -1062,3 +1081,13 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
 - 2026-10-30, rev 12: First migration `20261030133412_init_data_sources` created from the reviewed preview (byte-identical) and applied to Neon with `prisma migrate deploy` (direct URL, no shadow database). `migration_lock.toml` added. Read-only checks before and after. M1 stays partial: no application records have been written, and nothing is deployed.
 - 2026-10-30, rev 13: Idempotent seed (`prisma db seed` → `prisma/seed.ts`) wrote the genuine MD iMAP DNR lands `DataSource` row (terms SHA-256-checked against recorded evidence). Re-runs are a no-op, and differences stop without writing. Read-only `/sources` page (request-time read inside `<Suspense>`, empty and sanitized error states) plus a Sources link in a shared header. M1 stays partial: no deploy, and persistence across redeploy is unproven.
 - 2026-10-30, rev 14: `jiti` added as a direct devDependency pinned to 2.7.0 (the version the seed already used). The only lockfile change is the root devDependency entry, and no other package versions changed. The `prisma.config.ts` comment was updated. The seed re-run reported `unchanged`.
+- 2026-10-30, rev 15: Handoff checkpoint.
+  - Stale header corrected (the branch review flagged it). `main` = `origin/main` = `183d206` after the user's fast-forward merge and push.
+  - Hosting changed to **Railway** (user decision): D4 marked decided, Vercel findings kept as history, new §3.10 lists the Vercel assumptions to revisit.
+  - User-reported Railway deployment and persistence across redeploy recorded, labeled as not agent-verified.
+  - M1 acceptance reconciled. M1 stays partial: the §3.2 "reads and writes a row" criterion is unmet as worded and needs a user decision.
+  - `HANDOFF.md` added.
+- 2026-10-30, rev 16: Two user-approved corrections.
+  - (1) M1 persistence criterion amended to "An approved seed writes a persistent row; the deployed page reads it after redeployment". It is satisfied by the existing evidence (seed write agent-verified, deployed read after redeploy user-reported). All other M1 criteria were checked and met, so **M1 is complete**. User-facing create/read is still required in later milestones (M4, M7).
+  - (2) Removed the automatic Clerk → Neon Auth fallback (D1, §3.9, R9, env table). Clerk remains proposed, Neon Auth is an alternative only, and any blocker is discussed with the user before changing providers. Clerk domain and Google-verification statements are relabeled as unverified (as read 2026-10-30) and must be re-verified before M2 implementation.
+  - Earlier change-log entries (rev 7, rev 15) are left as history.
