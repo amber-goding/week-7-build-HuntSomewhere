@@ -280,3 +280,32 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Not tested (blocked by missing credentials, not failures):** database connectivity, a runtime query through `PrismaNeon`, and CLI commands that connect.
 - **Not done:** Neon setup, first migration, deploy, integration checks. Nothing committed. Plan updated to rev 9 (header, M1 row, change log).
 - **Next:** the user creates the Neon database and fills `.env.local`. Then a connectivity check and the first migration (each with approval), then the Vercel deploy.
+
+### 13. [Claude] M1 (partial): read-only Neon connectivity check
+
+- **Asked:** Verify the Neon connection with read-only checks only:
+  - load `.env.local` without displaying values;
+  - confirm both variables exist and point at the same endpoint (accounting for `-pooler`);
+  - `SELECT 1` on both URLs and through the Prisma runtime client with its Neon adapter.
+  Use existing tooling, with no installs and no exposed credentials. No public diagnostic route, no tables, writes, migrations, db push / pull, deploy, or commit. Close connections, remove temp files, and keep M1 partial.
+- **Context:** branch `feat/app-foundation`, clean tree at `1537e35` (the user committed the Prisma config and created `.env.local`, which is git-ignored). Existing tooling used: `dotenv` 17.4.2, `@neondatabase/serverless` 1.2.0 (transitive via the adapter), and `jiti` 2.7.0 (transitive via Prisma's config loader), to import the generated TypeScript client.
+- **Method:**
+  - A temporary script in the session scratchpad, outside the repo.
+  - `.env.local` parsed into a private object, never into the shell. Output is booleans and timings only. Errors are sanitized by redacting the URLs, user, password, and hosts, plus any `postgres://` or `*.neon.tech` pattern, and the run output was additionally filtered for those patterns.
+  - Raw checks: `Pool` → `SELECT 1` → `pool.end()`.
+  - Prisma check: mirrors `lib/db.ts` (generated `PrismaClient` + `PrismaNeon` with the pooled `DATABASE_URL`) → `$queryRaw SELECT 1` → `$disconnect()`. `lib/db.ts` itself wasn't imported, because `import "server-only"` only resolves inside Next.js.
+  - The script was deleted afterward.
+- **Results (2026-10-30):**
+  - Variables: `DATABASE_URL` present, `DATABASE_URL_UNPOOLED` present.
+  - Endpoint:
+    - both parse as Postgres URLs;
+    - the pooled host has `-pooler` and the direct host doesn't;
+    - **same endpoint after removing the suffix**, same domain, same database name, same role;
+    - `sslmode=require` on both;
+    - `connect_timeout` **not set on both** (recommendation from plan §3.9, not a failure).
+  - `SELECT 1` on the pooled URL: **passed** (≈1.9 s). On the direct URL: **passed** (≈1.2 s). Through the Prisma runtime client + `PrismaNeon` on the pooled URL: **passed** (≈2.8 s).
+  - No errors occurred, so no sanitized errors to report.
+- **Not exercised:** Prisma CLI commands that connect (e.g. `migrate status`), deliberately skipped to stay clearly read-only. The direct URL the CLI uses did pass `SELECT 1`. Whether migrate needs the unapproved `@prisma/engines` postinstall is still untested.
+- **Repo:** unchanged by the check (`git status` clean, no `prisma/migrations`). Plan updated to rev 10 (header with 9 commits, M1 row, §3.3 integration-checks row, change log). Nothing committed.
+- **M1 status:** still **partial**. Persistence (a table plus a write that survives a redeploy) and the Vercel deploy aren't proven.
+- **Next:** optionally add `&connect_timeout=15` to both URLs in `.env.local`. Then, with approval, check whether the Prisma CLI's migrate works with the skipped engine install scripts, and plan the first migration.
