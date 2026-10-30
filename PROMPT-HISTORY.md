@@ -241,3 +241,42 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
   - **Not verified:** visual rendering in a browser at phone width (no browser check was run).
 - **Not done (remaining M1):** Prisma 7 + Neon, Vercel deploy, integration checks, first migration. Nothing committed. Plan updated to rev 8 (header, M1 row partial note, change log).
 - **Next:** finish M1 with Prisma 7 + Neon (needs approval for the Prisma packages and the first migration), then the Vercel deploy.
+
+### 12. [Claude] M1 (partial): Prisma 7 configuration
+
+- **Asked:** On `feat/app-foundation`, prepare Prisma 7 configuration only. Installs authorized: `prisma`, `@prisma/client`, `@prisma/adapter-neon`, plus dependencies the official setup docs require.
+  - Create `prisma.config.ts`, a minimal PostgreSQL schema with the client generator, and a server-only reusable client.
+  - The CLI must load `.env.local` explicitly.
+  - `.env.example` holds placeholders only. Runtime uses the pooled URL, and the CLI uses the direct URL.
+  - No tables, migrations, db push, provisioning, deploy, or commit. Never print connection strings.
+- **Context:**
+  - Branch confirmed, tree clean at `92ff49a` (the user committed the foundation). No `.env.local`, and `DATABASE_URL` / `DATABASE_URL_UNPOOLED` are not set in the shell, so **credentials are unavailable**.
+  - Docs read 2026-10-30:
+    - **Neon Prisma guide:** Prisma 7, pin `@7`, `dotenv`, `import 'dotenv/config'`, `env('DATABASE_URL_UNPOOLED')`, `PrismaNeon({ connectionString })`. Its example uses `prisma-client-js`.
+    - **Prisma config reference:** env files "need to be loaded explicitly". `env()` throws if a var is undefined, and `process.env` should be used when it's optional.
+    - **Prisma generators doc:** `prisma-client` is the default, `output` is required, and **`prisma-client-js` is deprecated**.
+    - **Next.js docs:** installing `server-only` is optional, because Next handles the import internally.
+  - `npm view`: `prisma` `latest` is **8.0.0-rc.28**, and the 7.x latest is 7.10.1. prisma@7.10.1 engines: Node ^20.19 / ^22.12 / >=24 (we have 24.18.0).
+- **Decisions:**
+  - Pinned exactly: `@prisma/client` and `@prisma/adapter-neon` 7.10.1 (deps), and `prisma` 7.10.1 (dev).
+  - `dotenv` **17.4.2** (dev). 18.0.9 was published 2026-10-22, and the docs don't pin a version.
+  - `tsx` not installed: Neon lists it only for running TS scripts, and Prisma loads `prisma.config.ts` itself.
+  - `@neondatabase/serverless` comes transitively (1.2.0), as Neon advises.
+  - `prisma.config.ts` uses `config({ path: ".env.local", quiet: true })` and reads `DATABASE_URL_UNPOOLED` via `process.env`. The datasource is included only when the var is set, so generate and validate run without credentials.
+  - Schema: `prisma-client` generator → `lib/generated/prisma` (gitignored and ESLint-ignored), `postgresql`, no models. **Deviates from Neon's `prisma-client-js` example** in favor of Prisma's own current guidance.
+  - `lib/db.ts`: `import "server-only"`, lazy `getPrisma()` with a `globalThis` cache, `PrismaNeon` with the pooled `DATABASE_URL`, and a clear error if it's unset.
+  - Scripts added: `db:validate`, `db:generate`, `postinstall: prisma generate` (needed because the generated client is gitignored).
+  - `.env.example` has empty `DATABASE_URL` / `DATABASE_URL_UNPOOLED`.
+- **Agent mistake caught (mine):**
+  - **What happened:** to prove `postinstall` regenerates the client, I ran `npm ci`. It deleted most of `node_modules` and then failed with **EPERM**, because the user's running `npm run dev` (pids 25092/40168/38892) held `lightningcss.win32-x64-msvc.node`. `next` and `prisma` were missing afterward, and the user's dev server was left running against removed files.
+  - **Fix:** I didn't kill the user's process. I restored with `npm install` from the same lockfile, which succeeded with the same top-level versions and with `postinstall` regenerating the client.
+  - **Lockfile:** it changed only by adding `"hasInstallScript": true` to the root entry, which is correct given the new `postinstall`.
+  - **Lesson:** check for running dev servers before any command that deletes `node_modules`. This is a gate-evidence candidate.
+- **Install-script warnings (npm 11 allowScripts), not approved:** `prisma` preinstall, `@prisma/engines` postinstall, and `unrs-resolver`. validate and generate work without them. **Whether migrate / db push need the `@prisma/engines` postinstall is untested** and needs checking before the first migration.
+- **Verified (no credentials):**
+  - `prisma validate` exit 0. `prisma generate` exit 0 (Prisma Client 7.10.1). lint exit 0. typecheck exit 0. build exit 0 (static `/`), all after the restore.
+  - `.env.local` loading was proven with a **temporary file of fake `.invalid` URLs**: the config resolved the *direct* host. Without the file, the datasource was omitted. The file was then deleted. This used Node's TS loader, not Prisma's.
+  - `lib/generated/` and `.env.local` are git-ignored, and `.env.example` is trackable. No connection-string pattern in tracked or untracked files. `git diff --check` exit 0.
+- **Not tested (blocked by missing credentials, not failures):** database connectivity, a runtime query through `PrismaNeon`, and CLI commands that connect.
+- **Not done:** Neon setup, first migration, deploy, integration checks. Nothing committed. Plan updated to rev 9 (header, M1 row, change log).
+- **Next:** the user creates the Neon database and fills `.env.local`. Then a connectivity check and the first migration (each with approval), then the Vercel deploy.

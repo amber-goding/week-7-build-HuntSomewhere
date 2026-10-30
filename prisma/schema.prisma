@@ -1,0 +1,11 @@
+// Connection URLs live in prisma.config.ts (CLI) and lib/db.ts (runtime).
+// No models yet: application tables arrive with their milestones.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -2,7 +2,7 @@
 
 Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and `AGENTS.md` (§1).
 
-**Last updated:** 2026-10-30 (revision 8) · **Repo state (from `git log` / `git status`, 2026-10-30):** branch `feat/app-foundation`; seven commits, latest `d910c3e` "docs: document provider options and setup dependencies". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. **Uncommitted:** Next.js app foundation (partial M1: `app/`, `package.json`, `package-lock.json`, configs, `.gitignore`) and revision 8.
+**Last updated:** 2026-10-30 (revision 9) · **Repo state (from `git log` / `git status`, 2026-10-30):** branch `feat/app-foundation`; 8 commits, latest `92ff49a` "feat: initialize HuntSomewhere application foundation". Application foundation committed. **Uncommitted:** Prisma 7 configuration (partial M1) and revision 9.
 
 ### Status vocabulary
 
@@ -890,7 +890,7 @@ Each milestone ends with: acceptance checks run and recorded, the diff reviewed 
 |---|---|---|---|---|---|
 | **M0a** | **Read-only feasibility + `AGENTS.md`** (§3.1). *In progress: `AGENTS.md` created and Codex discovery verified; the DNR/iMAP data check is done (§3.4); other rows remain open.* | P | 1.5–2.5 | — | §3.1 exit criteria. Codex result recorded. |
 | M0b | **Account provisioning support**: user creates accounts as each milestone approaches (§2.3). Agent documents setup steps and env-var names. | P | 0.5–1 | M0a | `.env.example` lists names only (no values). Each provider's integration check runs in its milestone. |
-| M1 | **Skeleton + deploy:** Next.js/TS, Prisma, Neon, theme, production deploy. *Partial (2026-10-30): Next.js 16.4.3 App Router + TypeScript + Tailwind 4 + ESLint foundation and themed landing page; lint, typecheck, build pass locally. Not done: Prisma/Neon, deploy, integration checks, migration.* | P | 1.5–2.5 | M0a; Neon + hosting accounts | Neon/hosting integration check (§3.2). Data survives a redeploy. *Install + migration approval points.* `.env*` gitignored, and no secrets in Git or the client bundle. |
+| M1 | **Skeleton + deploy:** Next.js/TS, Prisma, Neon, theme, production deploy. *Partial (2026-10-30): Next.js 16.4.3 foundation + landing page; Prisma 7.10.1 configured (`prisma.config.ts` loads `.env.local`, empty PostgreSQL schema, `prisma-client` generator, server-only lazy client in `lib/db.ts`, `.env.example`). validate / generate / lint / typecheck / build pass without credentials. Not done: Neon credentials + connectivity test, first migration, Vercel deploy, integration checks.* | P | 1.5–2.5 | M0a; Neon + hosting accounts | Neon/hosting integration check (§3.2). Data survives a redeploy. *Install + migration approval points.* `.env*` gitignored, and no secrets in Git or the client bundle. |
 | M2 | **Auth + profiles + roles** | P | 1.5–2.5 | M1; auth account | Auth integration check. A signup payload containing a role is ignored (test). A non-admin gets 403 on admin routes, and a non-location-reviewer gets 403 on location review (tests). |
 | M3 | **Public data + browse:** WMA import per §3.4, split map/list, area detail | P | 2.5–3.5 | M1, M0a source; map key | Maps integration check. `ImportRun` recorded. Detail shows source, dates, and notice. No area shows "hunting confirmed" without a recorded DNR-page quote and date (test). A non-JSON or maintenance response fails the run (test). Coverage statement uses real counts. Usable at phone width. |
 | M4 | **Listings + versioned review:** editor, `ListingVersion`, classification, general + location review, approximate placement + bucket, photos, demo seed | P | 3–4.5 | M2; storage (D5 approved) | Storage integration check. Ordinary edit publishes immediately. Location, rules, or authority edit keeps the old version live until all scopes approve. A general admin can't see private location values (test). A public DTO contains no private fields (test). Exact point outside the declared county is flagged. EXIF stripped (test). |
@@ -1049,3 +1049,10 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
   - Cream / forest-green landing page with no listings or controls.
   - `.gitignore` keeps `.env*` ignored but allows `.env.example`.
   - Remaining M1: Prisma 7 + Neon, Vercel deploy, integration checks, and the first migration (each needs approval).
+- 2026-10-30, rev 9: M1 Prisma configuration (partial).
+  - Prisma 7.10.1 (`prisma`, `@prisma/client`, `@prisma/adapter-neon`, pinned exactly) + dotenv 17.4.2.
+  - `prisma.config.ts` explicitly loads `.env.local` and uses `DATABASE_URL_UNPOOLED`. The datasource is omitted when it's unset, so generate and validate work without credentials.
+  - Schema has the `prisma-client` generator (the current default; `prisma-client-js` is deprecated per Prisma docs), output `lib/generated/prisma` (gitignored), and no models.
+  - `lib/db.ts` is server-only, with a lazy `PrismaNeon` client using the pooled `DATABASE_URL`.
+  - `.env.example` has names only. `postinstall` runs `prisma generate`.
+  - Connectivity not tested (no credentials). No migration, no db push.
