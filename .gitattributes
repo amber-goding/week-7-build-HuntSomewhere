@@ -1,0 +1,2 @@
+# Preserved source artifacts: stored byte-for-byte, never converted or whitespace-checked (project-plan.md §3.6 R1).
+data/sources/** -text -whitespace

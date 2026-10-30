@@ -62,6 +62,12 @@ async function TripDetails({ params }: { params: Promise<{ id: string }> }) {
         Saved {trip.createdAt.toISOString().slice(0, 10)}
         {trip.aiAssisted ? " · started from an AI suggestion and reviewed before saving" : ""}.
       </p>
+      <Link
+        href={`/trips/${trip.id}/areas`}
+        className="inline-block rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep dark:bg-cream dark:text-forest-deep"
+      >
+        Discover public areas
+      </Link>
     </div>
   );
 }

@@ -1,0 +1,882 @@
+{
+ "currentVersion": 11.3,
+ "cimVersion": "3.3.0",
+ "id": 0,
+ "name": "DNR Owned Lands and Conservation Easements",
+ "type": "Feature Layer",
+ "parentLayer": null,
+ "defaultVisibility": true,
+ "minScale": 0,
+ "maxScale": 0,
+ "canScaleSymbols": false,
+ "geometryType": "esriGeometryPolygon",
+ "description": "The Maryland Department of Natural Resources (DNR) manages over 446,000 acres of public lands and protected open space in the state. The DNR Lands data (part of Technology Toolbox Protected Lands data set) consists of mapped information that represent those lands that are owned by the Maryland Department of Natural Resources. Utilizing various land protection programs and funding sources, the Maryland Department of Natural Resources has preserved environmentally important lands through the use of perpetual conservation easements. The Forest Legacy Program is designed to identify and protect environmentally important forest lands that are threatened by present or future conversion to non-forest use through the use of perpetual conservation easements between willing sellers and willing buyers. Only private forest land in a Forest Legacy Area is eligible for the program. Marylands Conservation Reserve Enhancement Program (CREP) has helped thousands of Maryland landowners plant streamside buffers, establish wetlands, protect highly erodible land, and create wildlife habitat. The State of Maryland has entered into a memorandum of Agreement with USDA authorizing the State of Maryland to continue the voluntary program for the purchase of perpetual easements for Conservation Reserve Program (CRP) land. A perpetual CREP easement is a written legal agreement between a landowner and the State of Maryland in which there is an acquired permanent interest in the land to install or maintain conservation practices that protect water quality and natural resources. The Maryland Department of Natural Resources (DNR) administers the CREP easement program. DNR is also assisted by a number of local governments and non-government organization sponsors.Data from individual county and state records were used in production of DNR Lands. Specific Project boundary maps, subdivision plats and deed plots were used to create boundary polygons. In the case of the Chesapeake Forest properties, original property boundary data was received from the Chesapeake Corporation. The horizontal accuracy of these lines is being continually improved.The Department of Natural Resources makes no warranty, expressed or implied, as to the use or appropriateness of Spatial Data, and there are no warranties of merchantability or fitness for a particular purpose or use. The information contained in Spatial Data is from publicly available sources, but no representation is made as to the accuracy or completeness of Spatial Data. The Department of Natural Resources shall not be subject to liability for human error, error due to software conversion, defect, or failure of machines, or any material used in the connection with the machines, including tapes, disks, CD-ROMs or DVD-ROMs and energy. The Department of Natural Resources shall not be liable for any lost profits, consequential damages, or claims against the Department of Natural Resources by third parties. The liability of the Department of Natural Resources for damage regardless of the form of the action shall not exceed any distribution fees that may have been paid in obtaining Spatial Data.",
+ "copyrightText": "MD iMAP, DNR",
+ "editFieldsInfo": null,
+ "ownershipBasedAccessControlForFeatures": null,
+ "syncCanReturnChanges": false,
+ "relationships": [],
+ "isDataVersioned": false,
+ "isDataArchived": false,
+ "infoInEstimates": [
+  "extent",
+  "count"
+ ],
+ "isDataBranchVersioned": false,
+ "isDataReplicaTracked": false,
+ "isCoGoEnabled": false,
+ "supportsRollbackOnFailureParameter": true,
+ "archivingInfo": {
+  "supportsQueryWithHistoricMoment": false,
+  "startArchivingMoment": -1
+ },
+ "supportsStatistics": true,
+ "supportsExceedsLimitStatistics": true,
+ "supportsAdvancedQueries": true,
+ "supportsValidateSQL": true,
+ "supportsCoordinatesQuantization": true,
+ "supportsQuantizationEditMode": true,
+ "supportsCalculate": true,
+ "supportsASyncCalculate": true,
+ "supportsDatumTransformation": true,
+ "advancedQueryCapabilities": {
+  "supportsPagination": true,
+  "supportsTrueCurve": true,
+  "supportsQueryWithDistance": true,
+  "supportsReturningQueryExtent": true,
+  "supportsStatistics": true,
+  "supportsPercentileStatistics": true,
+  "supportsHavingClause": true,
+  "supportsOrderBy": true,
+  "supportsDistinct": true,
+  "supportsCountDistinct": true,
+  "supportsAdvancedQueryRelated": true,
+  "supportsQueryRelatedPagination": true,
+  "supportsCurrentUserQueries": true,
+  "supportsQueryWithResultType": true,
+  "supportsReturningGeometryCentroid": true,
+  "supportsSqlExpression": true,
+  "supportsQueryWithDatumTransformation": true,
+  "supportsLod": false,
+  "supportsQueryWithLodSR": false,
+  "supportsQueryAnalytic": true
+ },
+ "advancedQueryAnalyticCapabilities": {
+  "supportsLinearRegression": true,
+  "supportsAsync": true,
+  "supportsPercentileAnalytic": true
+ },
+ "advancedEditingCapabilities": {
+  "supportedSqlFormatsInCalculate": [
+   "standard"
+  ],
+  "supportsAsyncApplyEdits": true,
+  "supportsApplyEditsbyUploadID": true,
+  "supportedApplyEditsUploadIDFormats": "JSON"
+ },
+ "hasGeometryProperties": true,
+ "geometryProperties": {
+  "shapeAreaFieldName": "Shape__Area",
+  "shapeLengthFieldName": "Shape__Length",
+  "units": "esriMeters"
+ },
+ "hasMetadata": true,
+ "extent": {
+  "xmin": -8847984.7468,
+  "ymin": 4566999.325599998,
+  "xmax": -8354649.999,
+  "ymax": 4825760.0955,
+  "spatialReference": {
+   "wkid": 102100,
+   "latestWkid": 3857,
+   "xyTolerance": 0.001,
+   "zTolerance": 2,
+   "mTolerance": 0.001,
+   "falseX": -20037700,
+   "falseY": -30241100,
+   "xyUnits": 1.4892314192838538E8,
+   "falseZ": 0,
+   "zUnits": 1,
+   "falseM": -100000,
+   "mUnits": 10000
+  }
+ },
+ "sourceSpatialReference": {
+  "wkid": 102100,
+  "latestWkid": 3857,
+  "xyTolerance": 0.001,
+  "zTolerance": 0.001,
+  "mTolerance": 0.001,
+  "falseX": -20037700,
+  "falseY": -30241100,
+  "xyUnits": 10000,
+  "falseZ": -100000,
+  "zUnits": 10000,
+  "falseM": -100000,
+  "mUnits": 10000
+ },
+ "drawingInfo": {
+  "renderer": {
+   "type": "uniqueValue",
+   "field1": "LABEL",
+   "uniqueValueGroups": [
+    {
+     "heading": "",
+     "classes": [
+      {
+       "label": "DNR Owned Properties",
+       "description": "DNR Owned Properties",
+       "symbol": {
+        "type": "esriSFS",
+        "style": "esriSFSSolid",
+        "color": [
+         171,
+         205,
+         102,
+         255
+        ],
+        "outline": null
+       },
+       "values": [
+        [
+         "1"
+        ]
+       ]
+      },
+      {
+       "label": "DNR Owned Properties - Submerged",
+       "description": "DNR Owned Properties - Submerged",
+       "symbol": {
+        "type": "esriSFS",
+        "style": "esriSFSSolid",
+        "color": [
+         190,
+         232,
+         255,
+         255
+        ],
+        "outline": null
+       },
+       "values": [
+        [
+         "2"
+        ]
+       ]
+      },
+      {
+       "label": "Conservation Reserve Enhancement Program ",
+       "description": "Conservation Reserve Enhancement Program ",
+       "symbol": {
+        "type": "esriSFS",
+        "style": "esriSFSSolid",
+        "color": [
+         0,
+         255,
+         197,
+         255
+        ],
+        "outline": null
+       },
+       "values": [
+        [
+         "6"
+        ]
+       ]
+      },
+      {
+       "label": "Forest Legacy",
+       "description": "Forest Legacy",
+       "symbol": {
+        "type": "esriSFS",
+        "style": "esriSFSSolid",
+        "color": [
+         122,
+         182,
+         245,
+         255
+        ],
+        "outline": null
+       },
+       "values": [
+        [
+         "9"
+        ]
+       ]
+      },
+      {
+       "label": "Other",
+       "description": "Other",
+       "symbol": {
+        "type": "esriSFS",
+        "style": "esriSFSSolid",
+        "color": [
+         232,
+         190,
+         255,
+         255
+        ],
+        "outline": null
+       },
+       "values": [
+        [
+         "4"
+        ],
+        [
+         "7"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "uniqueValueInfos": [
+    {
+     "symbol": {
+      "type": "esriSFS",
+      "style": "esriSFSSolid",
+      "color": [
+       171,
+       205,
+       102,
+       255
+      ],
+      "outline": null
+     },
+     "value": "1",
+     "label": "DNR Owned Properties"
+    },
+    {
+     "symbol": {
+      "type": "esriSFS",
+      "style": "esriSFSSolid",
+      "color": [
+       190,
+       232,
+       255,
+       255
+      ],
+      "outline": null
+     },
+     "value": "2",
+     "label": "DNR Owned Properties - Submerged"
+    },
+    {
+     "symbol": {
+      "type": "esriSFS",
+      "style": "esriSFSSolid",
+      "color": [
+       0,
+       255,
+       197,
+       255
+      ],
+      "outline": null
+     },
+     "value": "6",
+     "label": "Conservation Reserve Enhancement Program "
+    },
+    {
+     "symbol": {
+      "type": "esriSFS",
+      "style": "esriSFSSolid",
+      "color": [
+       122,
+       182,
+       245,
+       255
+      ],
+      "outline": null
+     },
+     "value": "9",
+     "label": "Forest Legacy"
+    },
+    {
+     "symbol": {
+      "type": "esriSFS",
+      "style": "esriSFSSolid",
+      "color": [
+       232,
+       190,
+       255,
+       255
+      ],
+      "outline": null
+     },
+     "value": "4",
+     "label": "Other"
+    },
+    {
+     "symbol": {
+      "type": "esriSFS",
+      "style": "esriSFSSolid",
+      "color": [
+       232,
+       190,
+       255,
+       255
+      ],
+      "outline": null
+     },
+     "value": "7",
+     "label": "Other"
+    }
+   ],
+   "fieldDelimiter": ",",
+   "authoringInfo": {
+    "colorRamp": {
+     "type": "multipart",
+     "colorRamps": [
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        123,
+        172,
+        232,
+        255
+       ],
+       "toColor": [
+        123,
+        172,
+        232,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        93,
+        237,
+        90,
+        255
+       ],
+       "toColor": [
+        93,
+        237,
+        90,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        227,
+        105,
+        84,
+        255
+       ],
+       "toColor": [
+        227,
+        105,
+        84,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        209,
+        77,
+        196,
+        255
+       ],
+       "toColor": [
+        209,
+        77,
+        196,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        106,
+        130,
+        77,
+        255
+       ],
+       "toColor": [
+        106,
+        130,
+        77,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        247,
+        232,
+        96,
+        255
+       ],
+       "toColor": [
+        247,
+        232,
+        96,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        63,
+        53,
+        140,
+        255
+       ],
+       "toColor": [
+        63,
+        53,
+        140,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        93,
+        217,
+        204,
+        255
+       ],
+       "toColor": [
+        93,
+        217,
+        204,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        133,
+        82,
+        107,
+        255
+       ],
+       "toColor": [
+        133,
+        82,
+        107,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        168,
+        232,
+        149,
+        255
+       ],
+       "toColor": [
+        168,
+        232,
+        149,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        232,
+        176,
+        155,
+        255
+       ],
+       "toColor": [
+        232,
+        176,
+        155,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        99,
+        130,
+        242,
+        255
+       ],
+       "toColor": [
+        99,
+        130,
+        242,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        70,
+        127,
+        128,
+        255
+       ],
+       "toColor": [
+        70,
+        127,
+        128,
+        255
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "scaleSymbols": false,
+  "transparency": 0,
+  "labelingInfo": null
+ },
+ "hasM": true,
+ "hasZ": true,
+ "enableZDefaults": false,
+ "supportsVCSProjection": true,
+ "allowUpdateWithoutMValues": false,
+ "allowGeometryUpdates": true,
+ "allowTrueCurvesUpdates": true,
+ "onlyAllowTrueCurveUpdatesByTrueCurveClients": true,
+ "hasAttachments": false,
+ "supportsApplyEditsWithGlobalIds": false,
+ "htmlPopupType": "esriServerHTMLPopupTypeAsHTMLText",
+ "objectIdField": "OBJECTID",
+ "globalIdField": "",
+ "displayField": "DNRName",
+ "typeIdField": "Label",
+ "subtypeField": "",
+ "fields": [
+  {
+   "name": "OBJECTID",
+   "type": "esriFieldTypeOID",
+   "alias": "GIS Object ID",
+   "domain": null,
+   "editable": false,
+   "nullable": false,
+   "defaultValue": null,
+   "modelName": "OBJECTID"
+  },
+  {
+   "name": "Label",
+   "type": "esriFieldTypeInteger",
+   "alias": "Label",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "defaultValue": null,
+   "modelName": "Label"
+  },
+  {
+   "name": "DNRType",
+   "type": "esriFieldTypeString",
+   "alias": "DNR Type",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 75,
+   "defaultValue": null,
+   "modelName": "DNRType"
+  },
+  {
+   "name": "DNRName",
+   "type": "esriFieldTypeString",
+   "alias": "DNR Name",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 75,
+   "defaultValue": null,
+   "modelName": "DNRName"
+  },
+  {
+   "name": "ManagedBy",
+   "type": "esriFieldTypeString",
+   "alias": "Managed By",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 75,
+   "defaultValue": null,
+   "modelName": "ManagedBy"
+  },
+  {
+   "name": "County",
+   "type": "esriFieldTypeString",
+   "alias": "County",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 25,
+   "defaultValue": null,
+   "modelName": "County"
+  },
+  {
+   "name": "WebLink",
+   "type": "esriFieldTypeString",
+   "alias": "Web Link",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 100,
+   "defaultValue": null,
+   "modelName": "WebLink"
+  },
+  {
+   "name": "DESIG",
+   "type": "esriFieldTypeString",
+   "alias": "Designation",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 15,
+   "defaultValue": null,
+   "modelName": "DESIG"
+  },
+  {
+   "name": "LandIntere",
+   "type": "esriFieldTypeString",
+   "alias": "Land Interest",
+   "domain": null,
+   "editable": true,
+   "nullable": true,
+   "length": 10,
+   "defaultValue": null,
+   "modelName": "LandIntere"
+  },
+  {
+   "name": "Shape__Area",
+   "type": "esriFieldTypeDouble",
+   "alias": "Shape.STArea()",
+   "domain": null,
+   "editable": false,
+   "nullable": true,
+   "defaultValue": null,
+   "modelName": "Shape.STArea()",
+   "required": true
+  },
+  {
+   "name": "Shape__Length",
+   "type": "esriFieldTypeDouble",
+   "alias": "Shape.STLength()",
+   "domain": null,
+   "editable": false,
+   "nullable": true,
+   "defaultValue": null,
+   "modelName": "Shape.STLength()",
+   "required": true
+  }
+ ],
+ "geometryField": {
+  "name": "Shape",
+  "type": "esriFieldTypeGeometry",
+  "alias": "GIS Shape",
+  "domain": null,
+  "editable": true,
+  "nullable": true,
+  "defaultValue": null,
+  "modelName": "Shape"
+ },
+ "indexes": [
+  {
+   "name": "R864_pk",
+   "fields": "OBJECTID",
+   "isAscending": true,
+   "isUnique": true,
+   "description": ""
+  },
+  {
+   "name": "S851_idx",
+   "fields": "Shape",
+   "isAscending": true,
+   "isUnique": true,
+   "description": ""
+  }
+ ],
+ "datesInUnknownTimezone": false,
+ "dateFieldsTimeReference": {
+  "timeZone": "UTC",
+  "respectsDaylightSaving": false
+ },
+ "preferredTimeReference": null,
+ "types": [
+  {
+   "id": 1,
+   "name": "DNR Owned Properties",
+   "domains": {},
+   "templates": [
+    {
+     "name": "1",
+     "description": "",
+     "prototype": {
+      "attributes": {
+       "LandIntere": null,
+       "DESIG": null,
+       "Label": null,
+       "DNRType": null,
+       "DNRName": null,
+       "ManagedBy": null,
+       "County": null,
+       "WebLink": null
+      }
+     },
+     "drawingTool": "esriFeatureEditToolPolygon"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "DNR Owned Properties - Submerged",
+   "domains": {},
+   "templates": [
+    {
+     "name": "2",
+     "description": "",
+     "prototype": {
+      "attributes": {
+       "LandIntere": null,
+       "DESIG": null,
+       "Label": null,
+       "DNRType": null,
+       "DNRName": null,
+       "ManagedBy": null,
+       "County": null,
+       "WebLink": null
+      }
+     },
+     "drawingTool": "esriFeatureEditToolPolygon"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "name": "Conservation Reserve Enhancement Program ",
+   "domains": {},
+   "templates": [
+    {
+     "name": "6",
+     "description": "",
+     "prototype": {
+      "attributes": {
+       "LandIntere": null,
+       "DESIG": null,
+       "Label": null,
+       "DNRType": null,
+       "DNRName": null,
+       "ManagedBy": null,
+       "County": null,
+       "WebLink": null
+      }
+     },
+     "drawingTool": "esriFeatureEditToolPolygon"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "name": "Forest Legacy",
+   "domains": {},
+   "templates": [
+    {
+     "name": "9",
+     "description": "",
+     "prototype": {
+      "attributes": {
+       "LandIntere": null,
+       "DESIG": null,
+       "Label": null,
+       "DNRType": null,
+       "DNRName": null,
+       "ManagedBy": null,
+       "County": null,
+       "WebLink": null
+      }
+     },
+     "drawingTool": "esriFeatureEditToolPolygon"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Other",
+   "domains": {},
+   "templates": [
+    {
+     "name": "4",
+     "description": "",
+     "prototype": {
+      "attributes": {
+       "LandIntere": null,
+       "DESIG": null,
+       "Label": null,
+       "DNRType": null,
+       "DNRName": null,
+       "ManagedBy": null,
+       "County": null,
+       "WebLink": null
+      }
+     },
+     "drawingTool": "esriFeatureEditToolPolygon"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "name": "Other",
+   "domains": {},
+   "templates": [
+    {
+     "name": "7",
+     "description": "",
+     "prototype": {
+      "attributes": {
+       "LandIntere": null,
+       "DESIG": null,
+       "Label": null,
+       "DNRType": null,
+       "DNRName": null,
+       "ManagedBy": null,
+       "County": null,
+       "WebLink": null
+      }
+     },
+     "drawingTool": "esriFeatureEditToolPolygon"
+    }
+   ]
+  }
+ ],
+ "templates": [],
+ "maxRecordCount": 36000,
+ "supportedQueryFormats": "JSON, geoJSON, PBF",
+ "supportedExportFormats": "sqlite,filegdb,shapefile,csv,geojson",
+ "capabilities": "Query,Extract",
+ "useStandardizedQueries": true,
+ "bigIntegerRestrictedTo53Bits": true,
+ "supportedSpatialRelationships": [
+  "esriSpatialRelIntersects",
+  "esriSpatialRelContains",
+  "esriSpatialRelCrosses",
+  "esriSpatialRelEnvelopeIntersects",
+  "esriSpatialRelIndexIntersects",
+  "esriSpatialRelOverlaps",
+  "esriSpatialRelTouches",
+  "esriSpatialRelWithin",
+  "esriSpatialRelRelation"
+ ],
+ "standardMaxRecordCount": 4000,
+ "tileMaxRecordCount": 4000,
+ "standardMaxRecordCountNoGeometry": 32000,
+ "maxRecordCountFactor": 1
+}

@@ -5,7 +5,7 @@ export function SiteHeader() {
     <header className="border-b border-border">
       <nav
         aria-label="Main"
-        className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6"
+        className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-4 sm:px-6"
       >
         <Link
           href="/"
@@ -19,6 +19,12 @@ export function SiteHeader() {
             className="rounded-md px-2 py-1 text-sm font-medium text-forest underline-offset-4 hover:underline dark:text-cream"
           >
             Plan a trip
+          </Link>
+          <Link
+            href="/areas"
+            className="rounded-md px-2 py-1 text-sm font-medium text-forest underline-offset-4 hover:underline dark:text-cream"
+          >
+            Areas
           </Link>
           <Link
             href="/sources"

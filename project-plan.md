@@ -916,6 +916,14 @@ All AI calls are server-side. The key never reaches the client, and the model ne
 >
 > **Real OpenAI call verified locally (2026-10-30):** one call through the app's server action returned schema-valid output (1,292 input / 77 output / 0 reasoning tokens) and consumed exactly one allowance call (now 1/10). **Not yet verified:** the deployment and a browser walk-through. The G1–G7 sequence below is the earlier, larger proposal.
 
+> **Deployed and user-tested (user-reported, 2026-10-30):** `main` at `6edb839` on Railway. Three real people successfully tried the deployed app. The user gave no tester details, so none are recorded.
+>
+> **Public-area discovery (2026-10-30, branch `feat/public-area-discovery`, uncommitted):**
+> - `/areas` lists 6 curated WMAs (Garrett ×2, Allegany, Washington, Montgomery ×2), taken from the iMAP source (§3.4) with every county and DNR link checked.
+> - `/trips/[id]/areas` shows areas in the trip's counties: **county match only**, with hunting eligibility not confirmed.
+> - There's no migration, AI, or geometry. Source artifacts and provenance are preserved in `data/sources/md-imap-dnr-owned-lands/2026-10-30/` (§3.6 R1–R3, R5, R7, R8).
+> - Frederick was omitted, because its 2 WMAs have no DNR link in the source. This is a small step toward M3, not M3 itself.
+
 **Goal:** the smallest complete flow that shows working, honest software on the existing foundation. There are **no accounts, no private listings, and no personal information**.
 
 **Demo flow (one path, about 3 minutes):**

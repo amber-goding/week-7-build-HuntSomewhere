@@ -643,3 +643,55 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **User-reported local evidence (not agent-verified):** in a local browser, a saved trip still shows after refreshing the trip page.
 - **Asked:** Commit the reviewed gate-demo changes as "feat: add AI-assisted hunting trip planner", then on `main` run `pull --ff-only`, `merge --ff-only feat/gate-demo`, and `push origin main` to trigger Railway. Never stage `.env.local`. Stop on any failure or divergence. No force-push, reset, or merging `feat/auth-foundation`.
 - **Railway:** pushing `main` triggers a deploy, but whether it succeeded is **not verified** here. It's checked next.
+
+### 28. [Claude] User-reported: three real-user tests of the deployed app
+
+- **User-reported (not agent-verified):** three real people successfully tried the deployed app. The user gave no names, tasks, notes, or issues, so none are recorded here. This addresses the "≥ 3 real users" gate item, based on the user's report.
+
+### 29. [Claude] Public-area discovery linked to saved trips (`feat/public-area-discovery`)
+
+- **Asked:**
+  - Branch `feat/public-area-discovery` from clean, current `main`, keeping the planner, the allowance, and `/sources` working.
+  - Pick up to 6 genuine WMAs from the documented iMAP source (Frederick if supported). Verify each one's name, county, and official DNR page; omit any area whose county can't be established, and never pin a cross-county area to one county. Copy no descriptions or geometry.
+  - Build a typed, server-side curated dataset; an `/areas` page; a "Discover public areas" link on each trip, carrying only its id; and county-only results with explicit not-confirmed wording, a no-results state, and the DNR directory link.
+  - Verify the §3.6 reuse conditions, keeping metadata and attribution. No migration, package, AI call, commit, push, merge, deploy, or changes to existing DB records.
+- **Source work (2026-10-30, UTC):**
+  - iMAP layer 0 queried with `DESIG='WMA'` and no geometry: HTTP 200 JSON, 92 records.
+  - Selection rule: every record has a named county (not `Multiple`), a `WebLink` is present, and the linked DNR page returns 200, names the area, and mentions only the same county.
+  - Chosen: Mt. Nebo and Cunningham Swamp (Garrett), Dans Mountain (Allegany), Indian Springs (Washington), McKee Beshers and Strider (Montgomery).
+  - **Frederick isn't supported:** its 2 WMAs (Gravel Hill Swamp, Ridenour Swamp) have no `WebLink`, and DNR's region directory doesn't mention them.
+  - Names are title-cased from the source `DNRName`, not taken from DNR page text, which keeps U3 out of scope.
+- **Reuse (§3.6):**
+  - The catalog item still points at the same layer.
+  - The `licenseInfo` SHA-256 matches the hash in `prisma/seed.ts` (R8).
+  - The catalog item JSON, layer JSON, layer metadata XML, and the query response are stored byte-for-byte in `data/sources/md-imap-dnr-owned-lands/2026-10-30/`, with `.gitattributes` `-text` so the hashes survive checkout (R1/R2).
+  - `PROVENANCE.md` records the URLs, retrieval times, SHA-256s, transformations, exclusions, and the State of Maryland acknowledgment (R3).
+  - The pages show the credit, catalog link, retrieval date, "Source updated: unknown", the as-is disclaimer, and the ownership-is-not-permission notice (R5, R7).
+- **Built:**
+  - `lib/areas/curated.ts`: the typed list, `areasInCounties`, and `coveredCounties`.
+  - `app/areas/area-card.tsx`: the card. It separates "Link checked [date] (the page loaded)" from "Hunting eligibility: Not confirmed by HuntSomewhere". It also holds the notices.
+  - `app/areas/page.tsx`, with a coverage statement using real counts.
+  - `app/trips/[id]/areas/page.tsx`: a server-side trip load inside `<Suspense>`, `noindex`, "These results match county only. Species, methods, dates, and hunting access are not confirmed…", and a no-results state naming the covered counties and linking the DNR directory.
+  - A button on `app/trips/[id]/page.tsx`, and an Areas header link (the header now wraps on narrow screens).
+  - `scripts/check-areas.ts`.
+- **Verified (agent):**
+  - Lint, typecheck, and build pass. `/areas` is static; `/trips/[id]/areas` is ◐.
+  - `scripts/check-areas.ts`, **22/22**:
+    - artifact hashes and the terms hash;
+    - each area's record ids, counties from every record, WMA designation, and link against the preserved source;
+    - Garrett, Montgomery, Allegany + Montgomery (multiple counties), Frederick / none / unknown county → 0, and a two-county fixture matching either county once;
+    - malformed and unknown trip ids (read-only).
+  - Local production server: `/`, `/plan`, `/sources`, `/areas` (6 cards), a trip page (its link carries only the trip id), and Garrett discovery (exactly Mt. Nebo + Cunningham Swamp, with the county-only and not-confirmed wording) all load. Unknown and malformed ids show not-found.
+  - A wording scan found no "suitable" or "hunting allowed" claims other than the required negative notice.
+- **Not re-run:** `scripts/check-gate.ts`, because it resets synthetic allowance rows and creates trips, which modifies DB records. Planner code is unchanged apart from the trip-page link and the header.
+- **Not verified:**
+  - The no-results and multiple-county states rendered in a browser. They were checked through the matching function only, since no new trips were created.
+  - A mobile layout check.
+- **Not done:** no migration, DB writes, AI calls, commit, push, merge, or deploy.
+
+### 30. [Claude] Public-area discovery: user browser checks, commit, fast-forward to `main`, push
+
+- **User-reported local browser checks (not agent-verified):** a Garrett County trip shows its two areas, and their DNR links work. A Frederick County trip shows the limited-coverage / no-results message.
+- **Asked:** Commit as "feat: discover public areas from saved trip counties", then on `main` run `pull --ff-only`, `merge --ff-only feat/public-area-discovery`, and `push origin main` to trigger Railway. Stop on any failure or divergence. No reset, force-push, `feat/auth-foundation` merge, DB change, or AI calls.
+- **Railway:** whether the deploy succeeded is **not verified** here.
+- **Check failure caught and fixed (user-approved):** the first `git diff --cached --check` failed. The preserved `layer_metadata.xml` keeps the CRLF line endings it was downloaded with, and Git reported each CR as trailing whitespace. Editing the file would break §3.6 R1 and its recorded hash. Instead, `.gitattributes` now reads `data/sources/** -text -whitespace`. The re-run check is clean, and all four staged source blobs still match the SHA-256 values in `PROVENANCE.md`.
