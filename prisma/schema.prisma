@@ -1,5 +1,6 @@
 // Connection URLs live in prisma.config.ts (CLI) and lib/db.ts (runtime).
-// No models yet: application tables arrive with their milestones.
+// Tables arrive with their milestones; see project-plan.md §4.2.
+// Naming: snake_case tables and columns in Postgres, camelCase in Prisma.
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +9,25 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// A published dataset we import from (project-plan.md §3.4–3.6, §6.2).
+// Import runs, preserved metadata copies, and public areas link here in
+// later milestones.
+model DataSource {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Stable key the importer upserts on, e.g. "md-imap-dnr-owned-lands".
+  slug        String   @unique
+  // Display name, e.g. "DNR Owned Lands and Conservation Easements".
+  name        String
+  // Canonical page for the source (catalog item or publisher page) shown to users.
+  url         String
+  // Credit shown wherever the data appears, e.g. "MD iMAP, Maryland DNR".
+  attribution String
+  // Published reuse terms, recorded verbatim as retrieved (§3.6).
+  reuseTerms  String   @map("reuse_terms")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("data_sources")
 }

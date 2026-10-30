@@ -309,3 +309,70 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Repo:** unchanged by the check (`git status` clean, no `prisma/migrations`). Plan updated to rev 10 (header with 9 commits, M1 row, §3.3 integration-checks row, change log). Nothing committed.
 - **M1 status:** still **partial**. Persistence (a table plus a write that survives a redeploy) and the Vercel deploy aren't proven.
 - **Next:** optionally add `&connect_timeout=15` to both URLs in `.env.local`. Then, with approval, check whether the Prisma CLI's migrate works with the skipped engine install scripts, and plan the first migration.
+
+### 14. [Claude] M1 (partial): first model `DataSource` + SQL preview
+
+- **Asked:** Add the first useful model, `DataSource`, per the plan, with only identity, URL, attribution, reuse terms, and timestamps. Defer import-run relations and explain the constraints and defaults. Validate, regenerate the client, and produce a local SQL preview with `prisma migrate diff` from empty, checking the installed CLI's help for syntax. Preview only: no migrate dev / deploy, db push, records, install-script approval, installs, deploy, or commit. Report an engine block instead of changing permissions.
+- **Context:** branch `feat/app-foundation`, clean at `35cbbd9`. Plan §4.2 listed `DataSource` as name, URL, license/reuse terms, attribution text, and last import run (the last one deferred per the request). `prisma migrate diff --help` (7.10.1) says the command is **read-only**. Syntax: `--from-empty` / `--to-schema <path>` / `--script` / `-o <file>`. Only `--*-config-datasource` would touch the DB.
+- **Model (`prisma/schema.prisma`, table `data_sources`):**
+
+  | Field | Type / constraint | Why |
+  |---|---|---|
+  | `id` | `String @db.Uuid`, `@default(dbgenerated("gen_random_uuid()"))` | DB-side default, so any insert path (Prisma, SQL, import scripts) gets an ID. Built into PostgreSQL 13+. |
+  | `slug` | `String @unique` | Stable human-readable key the importer upserts on (e.g. `md-imap-dnr-owned-lands`) |
+  | `name` | `String` | Display name |
+  | `url` | `String` (not unique) | Canonical page shown to users. Two layers can share a portal page. |
+  | `attribution` | `String` | Credit text required in the product (§3.6 R5) |
+  | `reuseTerms` → `reuse_terms` | `String` (text) | Published terms verbatim (§3.6). Required, so no source can exist without recorded terms. |
+  | `createdAt` → `created_at` | `Timestamptz(3)`, `@default(now())` | Timezone-aware. DB default. |
+  | `updatedAt` → `updated_at` | `Timestamptz(3)`, `@updatedAt` | Set by Prisma Client, **with no DB default**, so raw SQL inserts must supply it |
+
+  - All fields are required. snake_case tables and columns are mapped from camelCase.
+  - No CHECK constraints: Prisma schema can't express them, so slug and URL format validation belongs at the app layer.
+  - **Deferred:** `ImportRun` relation, preserved metadata copies (R1), and `PublicArea` relation.
+- **Engine note:** `node_modules/@prisma/engines/schema-engine-windows.exe` exists (created 06:48:02, about 30 s after the `prisma` package, during entry 12's restore install). It wasn't downloaded during this task. No install-script approval was given or needed.
+- **SQL preview:** `prisma/sql-preview/0001_data_sources.preview.sql`, from `npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script -o …`. Contents: `CREATE SCHEMA IF NOT EXISTS "public"`, `CREATE TABLE "data_sources"` (as above, PK `data_sources_pkey`), and `CREATE UNIQUE INDEX "data_sources_slug_key"`. A "PREVIEW ONLY" header comment with the regeneration command was prepended. It sits outside `prisma/migrations`, which doesn't exist.
+- **Verified:** `prisma format --check` 0, `prisma validate` 0, `prisma generate` 0 (client 7.10.1), `migrate diff` 0, lint 0, typecheck 0, build 0, `git diff --check` 0. No DB connection was used by the diff, and Neon is unchanged.
+- **Not verified:** the Neon server's PostgreSQL version (`gen_random_uuid()` needs ≥ 13). Whether `migrate dev` works end to end.
+- **Plan:** rev 11 (header with 10 commits, §4.2 `DataSource` entry, M1 row, change log). Nothing committed.
+- **Next:** with explicit approval, create and apply the first migration to Neon (`migrate dev --name init_data_sources` on a dev branch), then the persistence proof and Vercel deploy.
+
+### 15. [Claude] M1 (partial): first migration `init_data_sources` applied to Neon
+
+- **Asked:** The user approved applying the first `DataSource` migration to the dedicated HuntSomewhere Neon database. Requirements:
+  - read-only pre-checks (PostgreSQL ≥ 13, URL match, existing tables and migration history), stopping if anything is unexpected;
+  - create migration `init_data_sources` from the reviewed preview via the documented CLI workflow, verifying the SQL before applying;
+  - apply with the direct connection;
+  - read-only post-checks, regenerate, lint/typecheck/build, keep the SQL and lock file;
+  - no reset, db push, records, script approvals, installs, deploy, or commit. M1 stays partial.
+- **Redirection from entry 14:** entry 14's "Next" suggested `migrate dev`. Instead I used the **documented baselining pattern** (`migrate diff --from-empty --to-schema --script` into a migration folder) plus **`migrate deploy`**.
+  - Prisma's shadow-database doc (read 2026-10-30) says `migrate dev` creates and drops a temporary shadow database (it needs CREATEDB, which would alter the Neon project beyond our DB) and can prompt for resets.
+  - `migrate deploy` uses no shadow database and never resets.
+  - CLI help: `migrate deploy` reads the datasource URL from the Prisma config, which is `DATABASE_URL_UNPOOLED` = direct.
+- **Pre-checks (read-only, temp script outside the repo, sanitized, deleted after):**
+  - Both env vars present. Same endpoint after removing `-pooler`, same database name and role.
+  - **PostgreSQL 18.6** (`server_version_num` 180006) on both connections.
+  - `public` is the only non-system schema. **No tables** in `public` or elsewhere. **No `_prisma_migrations`.**
+  - `gen_random_uuid()` available. Role can CREATE in `public`. Pooled and direct see the same (empty) table set.
+  - No stop condition was met.
+- **Migration creation:**
+  - Confirmed `prisma/migrations` didn't exist, then created `prisma/migrations/20261030133412_init_data_sources/`. The folder is named like `migrate dev` would (UTC timestamp + name).
+  - `migration.sql` came from `npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script -o …`. It's **byte-identical to the reviewed preview body** (preview minus its 5-line header). Its only statements are `CREATE SCHEMA IF NOT EXISTS "public"`, `CREATE TABLE "data_sources"` (with `data_sources_pkey`), and `CREATE UNIQUE INDEX "data_sources_slug_key"`.
+  - `prisma/migrations/migration_lock.toml` was written with the exact template from the installed `prisma@7.10.1` CLI source (`# Please do not edit this file manually` / `# It should be added in your version-control system (e.g., Git)` / `provider = "postgresql"`), because `migrate deploy` doesn't create it.
+- **Apply:** `npx prisma migrate status` (pre) reported 1 unapplied migration (exit 1, expected). `npx prisma migrate deploy` gave "All migrations have been successfully applied", exit 0. CLI output was piped through host and URL redaction, and only database name `neondb` / schema `public` were shown.
+- **Post-checks (read-only):**
+  - `migrate status`: "Database schema is up to date!" (exit 0).
+  - Tables: `_prisma_migrations`, `data_sources`, nothing else. No other schemas.
+  - `_prisma_migrations`: one row `20261030133412_init_data_sources`, finished, not rolled back, `applied_steps_count` 1, no logs.
+  - Columns:
+    - `id` uuid, default `gen_random_uuid()`;
+    - `slug`, `name`, `url`, `attribution`, `reuse_terms` text;
+    - `created_at` timestamptz(3), default `CURRENT_TIMESTAMP`;
+    - `updated_at` timestamptz(3), no default;
+    - all NOT NULL.
+  - Constraints: `data_sources_pkey` PRIMARY KEY(id), plus PostgreSQL 18's named NOT NULL constraints (one per column). Indexes: `data_sources_pkey`, `data_sources_slug_key` (unique on slug).
+  - Row count 0. The pooled connection sees the same tables and migration row.
+- **Checks:** `prisma validate` 0, `prisma generate` 0, lint 0, typecheck 0, build 0, `git diff --check` 0. Migration files are not git-ignored.
+- **Not done / not proven:** no application records written (persistence through the app is unproven), no Vercel deploy. No install-script approvals or installs. Nothing committed.
+- **Plan:** rev 12 (header, §4.2 `DataSource` marked migrated, M1 row, §3.3 integration-checks row, change log).
+- **Next:** prove application-record persistence: a minimal server-side write and read of a real `DataSource` row (the iMAP DNR source with its verbatim terms), with approval for the write. Then the Vercel deploy and a check that the row survives a redeploy.
