@@ -51,3 +51,51 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Done:** Rewrote `project-plan.md` (revision 2, change log §11).
 - **Verified:** Re-summed milestone estimates by hand (shown in plan §9). Checked section headings for structure. No code, so nothing was executed. Nothing installed, migrated, or committed.
 - **Next:** M0a — read-only feasibility research and creating `AGENTS.md`.
+
+### 4. [Claude] M0a (partial): agent discovery + Maryland public-data feasibility
+
+- **Asked:** Start M0a, limited to `AGENTS.md` and DNR/iMAP public hunting-area sources. Record findings with dated evidence and three implementation cautions. No installs, code, provisioning, migrations, or commits. Leave Codex verification pending.
+- **Done:**
+  - Created `AGENTS.md`: a pointer to `CLAUDE.md`, `project-plan.md`, and this file, with instructions to append `[Codex]`-tagged entries here in the existing format.
+  - Plan revision 3: findings rows in §3.3, new §3.4 (source detail plus recommended import), cautions C1–C3 in §9, and the spec fixes those cautions required.
+- **Findings (read-only GETs, 2026-10-30):**
+  - **Hunting Atlas not available:** the DNR Hunting Atlas service `dnr.geodata.md.gov/.../AIMS/HuntingAtlasRO/MapServer`, which search engines still cite, returned "Service … not found". The DNR `Hunting` services folder lists nothing public.
+  - **Working source:** the iMAP `MD_ProtectedLands` FeatureServer layer 0 (DNR Owned Lands and Conservation Easements), on the `mdgeodata.md.gov` host. The `geodata.md.gov` host served an HTML maintenance page.
+    - 580 records, 92 of them WMA polygons (65 names). A GeoJSON query in EPSG:4326 works.
+    - **No field identifies hunting access.** Most easement records are private land.
+    - 16 WMA names have no `WebLink`. All 48 distinct links returned 200.
+    - No data-edit date (the metadata creation date is 2025-04-14). No explicit license, only a credit line and a DNR no-warranty disclaimer.
+  - **Hunting terms live on per-WMA DNR pages:** the Avondale page explicitly permits hunting, with permit, Sunday, and reservation rules, but as unstructured text.
+- **Decisions:**
+  - Initial import is the WMA subset only. Hunting status starts "Not confirmed" and becomes confirmed only from a recorded DNR-page quote and date, never from `DESIG`.
+  - Easements are never imported as hunting areas.
+  - Reuse terms remain an open item, to be confirmed in writing before launch.
+- **Cautions recorded (C1–C3), with plan text corrected where it conflicted:**
+  - **C1 (§6.6):** previously said timeouts release the AI budget reservation. Now timeouts count as spent.
+  - **C2 (§6.5):** previously minted a fresh token on each retry, which with provider idempotency could deliver a dead link. Now tokens are deterministic per send via HMAC, and retries never mint or revoke.
+  - **C3 (§4.3):** previously carried ordinary edits *into* a pending version, which mutated a submitted version. Now every edit makes a new version, and approvals are bound to per-scope content hashes.
+- **Agent mistake caught (my own, during research):** my first link-status check reported 48/48 failures. The cause was Windows CRLF line endings in the URL list my script wrote, not the DNR site. A rerun with CR stripped gave 48/48 HTTP 200. This is a gate-evidence candidate.
+- **Verified:** the endpoint responses, counts, field lists, GeoJSON output, and link statuses above were observed directly. The license and freshness conclusions are from the metadata as observed. Hunting access was checked on one WMA page only (Avondale), not all 48.
+- **Not done:** the other M0a rows (federal lands, PAD-US, county/municipal, county boundaries and places, taxonomy, written-permission wording, provider docs). Codex verification is pending. Nothing installed, migrated, or committed.
+- **Next:** County boundaries + places (D7) research, which feeds the distance bounds and the location-review county check.
+
+### 5. [Claude] Reuse-terms correction + county and place reference research
+
+- **Asked:** Remove the unsupported "fine for the presentation with attribution" conclusion and record reuse permission as unresolved. Check the linked ArcGIS item and published Maryland/iMAP terms for an explicit reuse basis, keeping a disclaimer distinct from a grant, and without assuming a permission letter is needed. Keep HTTP availability separate from accuracy and freshness. Don't repeat completed endpoint tests. Then research county boundaries and town/place reference only.
+- **Correction to entry 4:**
+  - Entry 4 said "No explicit license" and that terms were "to be confirmed in writing before launch". Both were incomplete. I had checked only the service-level `iteminfo`, whose `licenseInfo` is empty, and not the official catalog item.
+  - My summary in that turn also called the terms "fine for the presentation with attribution". That conclusion was unsupported and has been removed from the plan.
+- **Findings (2026-10-30, read-only):**
+  - **Official catalog item:** ArcGIS item `a5de633b6ebf450b94dcb08b519c3414` (owner `mdimapdatacatalog`, Maryland's org) points to exactly our endpoint. Its `licenseInfo` contains the as-is / no-liability disclaimer **and, separately, an explicit grant**: "The Data can be freely distributed as long as the metadata entry is not modified or deleted. Any data derived from the Data must acknowledge the State of Maryland in the metadata." The same text appears on the iMAP county and municipal items.
+  - **Reuse status:** recorded as **UNRESOLVED pending your acceptance** of that published grant. No written letter is assumed to be needed.
+  - **Freshness:** catalog modified dates (2025-05-12) are recorded as catalog dates, not data-edit dates. Data freshness is still unknown.
+  - **Counties:** iMAP `MD_PoliticalBoundaries/FeatureServer/1` has 24 county-equivalents, **Baltimore City `COUNTY_FIP` 510 separate from Baltimore County 5**. It covers legal extent including water (Anne Arundel ≈ 0.160 vs 0.111 deg² in the shoreline layer) but is coarse (Baltimore City has 38 vertices). The shoreline "Physical" layers exclude water, and the detailed one has `maxRecordCount` 50.
+  - **Places:** the Census TIGER/Line 2025 Maryland place file has 536 places (157 incorporated + 379 CDPs), with polygons and internal points but no county field. Its ISO metadata has an explicit grant: "free to use in a product or publication, however acknowledgement must be given to the U.S. Census Bureau as the source." The Gazetteer files (2024/2025/2026, 536 rows each) have no use statement, so the TIGER grant isn't assumed to cover them. The iMAP municipal layer covers incorporated places only (162 polygons). A TIGER 2026 Maryland place file exists (HTTP 200) but hasn't been inspected.
+- **Decisions (proposed):**
+  - Counties come from iMAP Political County Boundaries, keyed by 5-digit FIPS (`24510` = Baltimore City).
+  - A county-line mismatch is flagged for the reviewer rather than rejected, because the boundaries are coarse and offshore blinds are legitimate.
+  - Towns come from Census TIGER/Line places, with each place's county assigned by testing its internal point.
+- **Done:** plan revision 4 (§3.3 rows, a four-question reading guide for findings, §3.4 split into availability / content / freshness / disclaimer / grant rows, new §3.5, D7, change log).
+- **Method notes:** I didn't repeat the earlier DNR endpoint or link tests. The TIGER zip was downloaded to its own scratchpad folder, and only its metadata and DBF header and rows were read in memory, with nothing extracted or executed. Vertex counts and areas come from EPSG:4326 query output (approximate planar deg²).
+- **Not done:** the other M0a rows (federal lands, PAD-US, county/municipal hunts, taxonomy, written-permission wording, provider docs). Codex verification is pending. Nothing installed, provisioned, migrated, or committed.
+- **Next:** pending your call on accepting the published iMAP and Census grants. Otherwise the remaining M0a research rows.

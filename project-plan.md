@@ -2,7 +2,7 @@
 
 Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and a proposed `AGENTS.md` (§1).
 
-**Last updated:** 2026-10-30 (revision 2) · **Repo state (observed 2026-10-30):** `README.md`, `CLAUDE.md`, `PROMPT-HISTORY.md`, this file. No application code. No commits beyond the initial one.
+**Last updated:** 2026-10-30 (revision 3) · **Repo state (observed 2026-10-30):** `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. No commits beyond the initial one.
 
 ### Status vocabulary
 
@@ -27,7 +27,7 @@ Decision labels: **[APPROVED]** = decided by the user · **[PROPOSED DEFAULT]** 
 | Claude Code | `CLAUDE.md` | `project-plan.md`, `PROMPT-HISTORY.md`, and the `prompt-history` skill as `CLAUDE.md` directs |
 | Codex | `AGENTS.md` at repo root **[VERIFY]**: Codex's documented convention. M0a confirms it by opening Codex in this repo. | `CLAUDE.md`, `project-plan.md`, `PROMPT-HISTORY.md` |
 
-- **[PROPOSED DEFAULT]** Add a short `AGENTS.md` that points to the three files above and contains no copied rules or plan content.
+- [AGENTS.md](AGENTS.md) (created 2026-10-30) points to the three files above and contains no copied rules or plan content. **Whether Codex actually reads it is pending verification** (§3.3).
 - **Observed 2026-10-30, this machine only:** `~/.codex` contained no `AGENTS.md`, and its `skills` directory listing was empty. This can change, and it says nothing about other machines. Rely on the repo-level `AGENTS.md`, not on any global configuration.
 - **One prompt history.** `AGENTS.md` tells Codex to append to the **same** `PROMPT-HISTORY.md` using the entry format already in that file, re-reading it before each write, and tagging entries `[Codex]`. Claude tags its entries `[Claude]`. There is no second history file.
 - Rules live in `CLAUDE.md`, the plan lives here, and `AGENTS.md` only points to them.
@@ -70,7 +70,7 @@ Provider and library choices are **candidates**. Their capabilities are **[VERIF
 | D4 | Hosting | UNRESOLVED | Vercel | Plan terms for this use, env-var handling, scheduled-job support (needed for email retries and reminders) |
 | D5 | Photo and document storage | **UNRESOLVED — not in approved stack; needs approval** | S3-compatible private bucket (Cloudflare R2 or AWS S3) with short-lived presigned URLs | Private access, presigned URL expiry, cost. Signed documents must never be at public URLs. |
 | D6 | Geospatial approach | PROPOSED | lat/lng columns + haversine SQL. Display geometry as simplified GeoJSON. PostGIS deferred. | Whether Prisma + Neon handle this adequately; whether PostGIS is needed for county-polygon bounds (§6.1) |
-| D7 | County and town reference data | PROPOSED | Seed Maryland county boundaries and a town/place list from a public source | Source, license, boundary availability (determines distance bounds, §6.1) |
+| D7 | County and town reference data | PROPOSED (sources researched 2026-10-30, §3.5) | Counties: iMAP Political Boundaries – County Boundaries (24 county-equivalents, including Baltimore City). Towns: Census TIGER/Line places for Maryland (incorporated places + CDPs). | Reuse permission UNRESOLVED pending user acceptance of the published grants. Inspect the 2026 TIGER place file before adopting it. County-line tolerance set in M4. |
 | D8 | Reconfirmation grace period | **UNRESOLVED (user decision)** | Placeholder 14 days in config | Not blocking. Only the value is open. |
 | D9 | OpenAI model, pricing, spending controls | UNRESOLVED | Smallest model passing the §6.6 evals, structured outputs | Current model list and pricing. **Which spending controls the selected account actually offers — not assumed.** The app's own limits (§6.6) are the enforced control. |
 | D10 | Signed-copy format | PROPOSED | Server-generated PDF from the immutable document version (library chosen at the start of M11) | Library choice, rendering fidelity |
@@ -139,16 +139,112 @@ Allowed writes: `AGENTS.md`, this file, `PROMPT-HISTORY.md`.
 
 | Check | Phase | Result | Evidence (link / observation + date) | Decision |
 |---|---|---|---|---|
-| DNR public lands data | M0a | — | — | — |
-| Federal hunting lands | M0a | — | — | — |
-| PAD-US | M0a | — | — | — |
-| County / municipal hunts | M0a | — | — | — |
-| County boundaries + places | M0a | — | — | — |
-| Species and method taxonomy | M0a | — | — | — |
-| MD written-permission wording | M0a | — | — | — |
-| Provider docs D1–D5, D9 | M0a | — | — | — |
-| Codex reads `AGENTS.md` | M0a | — | — | — |
-| Integration checks (§3.2) | M1–M9 | — | — | — |
+| DNR public lands data | M0a | **Working endpoint found (2026-10-30).** iMAP `MD_ProtectedLands` layer 0 "DNR Owned Lands and Conservation Easements". 580 records, 92 with `DESIG = 'WMA'` (65 distinct names). Polygons, GeoJSON output works. **No hunting attribute in any field.** **Reuse permission: UNRESOLVED.** A published reuse grant was found in the official catalog item (§3.4), but the user hasn't yet accepted it as the basis. | §3.4 | Initial source: WMA subset only, with hunting confirmed per area from DNR WMA pages (§3.4). |
+| DNR "Hunting Atlas" service | M0a | **Not available (2026-10-30).** `dnr.geodata.md.gov/.../AIMS/HuntingAtlasRO/MapServer?f=pjson` returned `{"error":{"code":500,"message":"Service AIMS/HuntingAtlasRO/MapServer not found"}}`. The `Hunting` folder lists no public services. Search engines still index the old URL. | §3.4 | Don't use. Recheck later. |
+| Federal hunting lands | M0a | Not yet researched | — | — |
+| PAD-US | M0a | Not yet researched | — | — |
+| County / municipal hunts | M0a | Not yet researched | — | — |
+| County boundaries | M0a | **Working endpoint found (2026-10-30).** iMAP `MD_PoliticalBoundaries` layer 1: 24 county-equivalents, **including Baltimore City (`COUNTY_FIP` 510) separate from Baltimore County (5)**. Published reuse grant in the catalog item. | §3.5 | Recommended: iMAP Political County Boundaries. **Reuse permission: UNRESOLVED** (published grant found; user acceptance pending). |
+| Town / place reference | M0a | **Working download found (2026-10-30).** Census TIGER/Line 2025 Maryland places: 536 places (157 incorporated + 379 CDPs) with internal points. Explicit Census use statement in the file's metadata. | §3.5 | Recommended: Census TIGER/Line places (state 24). **Reuse permission: UNRESOLVED** (published grant found; user acceptance pending). |
+| Species and method taxonomy | M0a | Not yet researched | — | — |
+| MD written-permission wording | M0a | Not yet researched | — | — |
+| Provider docs D1–D5, D9 | M0a | Not yet researched | — | — |
+| Codex reads `AGENTS.md` | M0a | **Pending.** `AGENTS.md` created 2026-10-30. Not verified until Codex is opened in the repo and reports reading it. | — | — |
+| Integration checks (§3.2) | M1–M9 | Not started | — | — |
+
+**M0a status:** in progress. Done: `AGENTS.md` created, DNR/iMAP public data, county boundaries, town/place reference. Still open: the other M0a rows and the Codex verification.
+
+**Reading these findings.** Each source is evaluated on four separate questions, and a "yes" on one never implies the others:
+1. **HTTP availability:** did the endpoint return the expected format on the date checked?
+2. **Content accuracy:** does the content correctly describe reality (e.g. does a page actually permit hunting)?
+3. **Freshness:** when was the *data* last updated, as opposed to its metadata or catalog item?
+4. **Reuse permission:** is there a published grant that allows our use? A no-warranty or liability disclaimer is **not** a reuse grant. It limits the publisher's responsibility and grants nothing.
+
+### 3.4 Maryland public-data source detail (observed 2026-10-30)
+
+All endpoint observations below are from read-only HTTP GET requests made on 2026-10-30. Raw responses were kept in the session scratchpad, not the repo.
+
+**Working data endpoint (machine-readable)**
+
+| Item | Value |
+|---|---|
+| Service | `https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer` (ArcGIS Server 11.3, capabilities `Query,Extract`, `maxRecordCount` 36000) |
+| Layer | `/0` — "DNR Owned Lands and Conservation Easements", polygons |
+| Host note | The `geodata.md.gov` hostname (the one most search results cite) returned an HTML "Site Maintenance" page for the same path on 2026-10-30. `mdgeodata.md.gov` returned JSON. The importer must treat a non-JSON response as a failed run, not as empty data. |
+| Query used | `…/FeatureServer/0/query?where=DESIG='WMA'&outFields=OBJECTID,DNRName,County,WebLink,DNRType,LandIntere&outSR=4326&geometryPrecision=5&maxAllowableOffset=0.0005&f=geojson` → HTTP 200, `application/geo+json`, 92 features, about 185 KB, no transfer-limit flag |
+| Formats | The service advertises `supportedQueryFormats: JSON`, but `f=geojson` worked in practice. Keep `f=json` as the fallback. |
+| Fields | `OBJECTID`, `Label`, `DNRType`, `DNRName`, `ManagedBy`, `County`, `WebLink`, `DESIG`, `LandIntere`, `Shape__Area`, `Shape__Length` |
+| Value distributions | `DNRType`: Owned Property 379, Conservation Easement - CREP 93, Conservation Easement - Other 64, Owned Property - Submerged 32, Conservation Easement - Forest Legacy 12. `DESIG`: SP 134, CREP 93, **WMA 92**, UNDESIGNATED 50, CFL 40, CEDNR 33, NRMA 29, SF 22, others under 22. `LandIntere`: OWN 404, CE 167, other codes ≤ 2 each. |
+| Coverage (WMA subset) | 92 polygons, 65 distinct names (a WMA can span several polygons, and at least one record is "Owned Property - Submerged"). County values cover 22 named counties plus "Multiple". DNR's public-lands page states 64 WMAs "in 19 of Maryland's 23 counties". The counts differ, so don't present the layer as a definitive WMA list. |
+| WebLink | Present on 63 of 92 WMA records. **16 WMA names have no link** (e.g. Chicone Creek, Fort Hill, McIntosh Run, Parkers Creek, Warrior Mountain). |
+| WebLink — HTTP availability | All 48 distinct links returned HTTP 200 on 2026-10-30 (old `http://` links redirect to `https://dnr.maryland.gov/wildlife/Pages/publiclands/...`). **This shows only that the pages loaded.** It says nothing about their content or how current it is. |
+| WebLink — content accuracy and freshness | **Not checked, except one page.** Only the Avondale page was read (see "Hunting access" below). The pages show no last-updated date, and that page's dove-field link text ("2025-2026") disagrees with its tooltip ("2022-2023"). Accuracy and currency must be confirmed per area when hunting status is recorded (import step 2). |
+| Data quality | Whitespace defects: `WebLink` values of `' '`, a name with a trailing tab (`'WARRIOR MOUNTAIN WMA\t'`), a `DESIG` of `' SP'`, `ManagedBy` values of `' '` and null. The importer must trim and normalize. |
+| Freshness | The layer metadata (`…/MapServer/0/metadata`) shows `CreaDate 20250414`. The official catalog item (below) shows modified 2025-05-12. **Both are metadata or catalog dates, not data-edit dates.** No data-edit date is exposed (`editingInfo` is absent). **Data freshness is unknown.** Display "Source updated: unknown" and "Last checked: [import date]". |
+| Official catalog item | ArcGIS Online item [`a5de633b6ebf450b94dcb08b519c3414`](https://www.arcgis.com/home/item.html?id=a5de633b6ebf450b94dcb08b519c3414), "Maryland Protected Lands - DNR Owned Properties and Conservation Easements". Owner `mdimapdatacatalog` (the Maryland iMAP data catalog account, org `njFNhDsUCentVYJW`). Public. Its `url` is exactly this layer (`…/MD_ProtectedLands/FeatureServer/0`). Created 2016-02-09, modified 2025-05-12, credit "MD iMAP, DNR". Read via `https://www.arcgis.com/sharing/rest/content/items/a5de633b6ebf450b94dcb08b519c3414?f=json` on 2026-10-30. (The service-level `info/iteminfo` has an empty `licenseInfo`, so the catalog item is where the terms are published.) Several other ArcGIS Online items copy this layer under third-party owners. They aren't authoritative. |
+| No-warranty disclaimer (not a grant) | Item `licenseInfo`: *"provided 'as is' without warranty of any kind … The user assumes the entire risk as to quality and performance of the Data … the State of Maryland [shall not] be liable … nor is there responsibility assumed to maintain the Data."* The layer metadata has a similar DNR disclaimer. These clauses limit liability. **They don't authorize reuse.** |
+| Published reuse basis | Same item `licenseInfo`: *"The Data can be freely distributed as long as the metadata entry is not modified or deleted. Any data derived from the Data must acknowledge the State of Maryland in the metadata."* This is an **explicit published grant** for distribution and derived data. Its conditions: (a) when redistributing the data, keep the metadata entry intact (we link to the item rather than re-hosting the raw data); (b) our derived data (simplified, merged WMA areas) must acknowledge the State of Maryland in our metadata (the source record, About page, and API attribution). No separate written permission is assumed to be needed, because the published terms already state the grant. |
+| Reuse permission status | **UNRESOLVED until the user accepts this published grant as the project's basis.** Nothing found so far requires a written permission letter. |
+| Hunting access (content) | **Not identified by the dataset.** No field states hunting status. `DESIG` is a land designation, not a permission, and CREP / Forest Legacy / other easements are mostly **private land**. Only the per-area DNR web page states hunting terms. Example (fetched 2026-10-30): the Avondale WMA page says *"Public hunting on Avondale WMA is permitted during legal hunting seasons with restrictions"*, and lists a free permit requirement, seasonal permit-holder access, no Sunday hunting, and reservations for some seasons. |
+
+**Pages describing data (not data endpoints)**
+- DNR public lands home: `https://dnr.maryland.gov/wildlife/Pages/publiclands/home.aspx`. States 64 WMAs, "primarily managed for hunting, trapping and other wildlife-dependent recreational uses", and lotteries and reservations on popular areas. No downloadable data and no last-updated date.
+- WMA maps by region: `https://dnr.maryland.gov/wildlife/pages/publiclands/allbyregion.aspx` (HTML and PDF maps).
+- Per-WMA pages, e.g. `https://dnr.maryland.gov/wildlife/Pages/publiclands/central/avondale.aspx` (HTML). The hunting terms there are unstructured text.
+- Annual rules: *Guide to Hunting & Trapping in Maryland*, linked from DNR at `https://www.eregulations.com/maryland/hunting/`. That is third-party hosted, and its terms have not been reviewed.
+- An Esri-hosted "WMA" sample service at `servicesdev.arcgis.com` describes itself as modified from MD iMAP data. **It is not official. Don't use it.**
+
+**Missing for our model** (show "Not provided by source"; never infer): hunting permitted (yes/no), species, allowed methods/devices, permit/reservation/lottery requirements, Sunday rules, closed or safety zones, parking/access points, accessibility, and data-edit dates. Cooperative WMAs, federal lands, county/municipal hunts, and state parks/forests open to hunting are **not covered** by the WMA subset.
+
+**Recommended initial import approach (M3)**
+1. Pull **only `DESIG = 'WMA'`** from layer 0 as GeoJSON in EPSG:4326, simplified (as in the query above). Store `OBJECTID` as the source record ID, plus trimmed name, county, `WebLink`, `DNRType`, and `LandIntere`. Merge polygons by normalized name into one public area, keeping all polygons for display.
+2. Each area starts with hunting status **"Not confirmed — check DNR"**. It is labeled *"Hunting confirmed by DNR page"* only after a person (or a later, reviewed extraction step) records a quote and the fetch date from that area's `WebLink` page. Areas without a `WebLink` stay unconfirmed. **The importer never sets hunting status from `DESIG`.**
+3. Public-area cards and details always show: source "MD iMAP / Maryland DNR — DNR Owned Lands and Conservation Easements", the endpoint link, the DNR page link, "Source updated: unknown", "Last checked: [date]", the no-warranty note, and the standing ownership-is-not-permission notice (§6.2).
+4. Treat a non-JSON response, an HTTP error, or a feature count under half the last import's as a **failed run**. Keep serving the last good import (§6.2).
+5. Other designations (state forests `SF`, Chesapeake Forest Lands `CFL`, `NRMA`; 42 distinct names, 72 records with links) are a **later expansion**, using the same confirmation rule. Never import easement (`CREP`, `CEDNR`, Forest Legacy) records as hunting areas.
+6. **Reuse:** importing depends on the user accepting the published grant (see "Reuse permission status"). If it's accepted, meet its conditions: acknowledge the State of Maryland in our source metadata and attribution, link to the catalog item, and never alter or strip its metadata if raw data is ever redistributed. Re-check the item's `licenseInfo` on each import and fail the run if the grant text has changed.
+
+### 3.5 County boundaries and town/place reference (observed 2026-10-30)
+
+These sources feed D7: county placement, distance bounds (§6.1), the location-review county check (§4.3), and town buckets.
+
+**Baltimore City is a county-equivalent.** Maryland has **24** county-level jurisdictions: 23 counties plus Baltimore City. Both recommended sources list Baltimore City separately from Baltimore County.
+- The county picker shows both as separate choices ("Baltimore City" and "Baltimore County"), never just "Baltimore".
+- The canonical county key is the 5-digit FIPS GEOID: `24005` is Baltimore County, `24510` is Baltimore City. iMAP stores FIPS as an integer (`5`, `510`), so build the key as `"24" + zero-pad(3)`.
+- Census also lists "Baltimore city" as a **place** (GEOID `2404000`). In the town list it appears inside county `24510`, and it must not create a second "Baltimore" county entry.
+
+#### County boundaries: candidates
+
+| Source | Endpoint / file | Fields | Coverage, format, geometry | Freshness | Reuse |
+|---|---|---|---|---|---|
+| **iMAP Political Boundaries – County Boundaries** (recommended) | `https://mdgeodata.md.gov/imap/rest/services/Boundaries/MD_PoliticalBoundaries/FeatureServer/1`. Catalog item [`a24953147769432585eb6e0b655a835b`](https://www.arcgis.com/home/item.html?id=a24953147769432585eb6e0b655a835b) (owner `mdimapdatacatalog`). | `COUNTY`, `DISTRICT`, `TSD_ID`, `OBJECTID_1`, `COUNTY_FIP`, `COUNTYNUM` | 24 features, one ring each. `maxRecordCount` 3000. Query output tested in EPSG:4326 JSON. Covers **legal extent including water** (Anne Arundel ≈ 0.160 deg² vs 0.111 in the shoreline layer). **Coarse in places:** Baltimore City has 38 vertices, Anne Arundel 3,210. | No data-edit field. Catalog item modified 2025-05-12 (catalog date, not data date). | Same iMAP grant as §3.4 ("freely distributed … metadata entry not modified … derived data must acknowledge the State of Maryland"). |
+| iMAP Physical Boundaries – County Boundaries (Detailed) | `…/Boundaries/MD_PhysicalBoundaries/FeatureServer/0`. Item `2315ef0b071a4ec59420e3d342dbcfe2` | `COUNTY`, `DISTRICT`, `COUNTY_FIP`, `COUNTYNUM`, `CREATION_D`, `LAST_UPDAT` | 24 features. **Shoreline-following**, multi-ring (islands): Anne Arundel has 16 rings and 48,673 vertices. **`maxRecordCount` 50.** Excludes open water. | Has `LAST_UPDAT` per feature (not reviewed for all rows) | Same iMAP grant |
+| iMAP Physical Boundaries – County Boundaries (Generalized) | `…/MD_PhysicalBoundaries/FeatureServer/1`. Item `4c172f80b626490ea2cff7b699febedb` | `county`, `district`, `county_fip`, `countynum`, `creation_d`, `last_updat` | 24 features, shoreline-based, one ring each | `last_updat` for Baltimore County 2012-02-14, Baltimore City 2009-11-18 | Same iMAP grant |
+| Census TIGER/Line counties (alternative) | `https://www2.census.gov/geo/tiger/TIGER2026/COUNTY/tl_2026_us_county.zip` (HTTP 200, about 83 MB, **national file, not inspected**) | Not inspected | Includes water area (per Gazetteer `AWATER`) | 2026 vintage | TIGER grant (below) |
+
+**Recommended county source: iMAP Political Boundaries – County Boundaries.**
+- **Why:** it's state-published, has all 24 county-equivalents with FIPS, and its legal extent includes water. That matters because waterfowl blinds and island or shoreline properties can sit offshore, and the shoreline layers would wrongly fail them.
+- **Caution:** its coarseness means the location-review check must treat a point that falls outside the declared county, or within a tolerance of a county line, as **"near or outside county line — reviewer confirms"**, never an automatic rejection. The tolerance is decided in M4, after measuring against the detailed layer.
+- **Display:** the map uses a simplified copy derived from this same source, so it's one source with one attribution.
+
+#### Town / place reference: candidates
+
+| Source | Endpoint / file | Fields | Coverage, format | Freshness | Reuse |
+|---|---|---|---|---|---|
+| **Census TIGER/Line places, Maryland** (recommended) | `https://www2.census.gov/geo/tiger/TIGER2025/PLACE/tl_2025_24_place.zip` (2.73 MB, **inspected**). A 2026 file exists at `…/TIGER2026/PLACE/tl_2026_24_place.zip` (HTTP 200, 2.74 MB, **not inspected**). | `STATEFP`, `PLACEFP`, `PLACENS`, `GEOID`, `GEOIDFQ`, `NAME`, `NAMELSAD`, `LSAD`, `CLASSFP`, `PCICBSA`, `MTFCC`, `FUNCSTAT`, `ALAND`, `AWATER`, `INTPTLAT`, `INTPTLON` | Shapefile with polygons. 536 places: 157 incorporated (123 towns, 28 cities + Baltimore city, 5 villages) and 379 CDPs (e.g. Columbia, Waldorf, Ellicott City). **No county field.** | Vintage year in the filename | **Explicit grant** in the file's ISO metadata: *"The TIGER/Line Shapefile products are not copyrighted … These products are free to use in a product or publication, however acknowledgement must be given to the U.S. Census Bureau as the source."* The same text says the boundaries are "for statistical data collection and tabulation purposes only." TIGER/Line is a registered trademark. |
+| Census Gazetteer places, Maryland | `https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2026_Gazetteer/2026_gaz_place_24.txt` (also 2025 and 2024) | `USPS`, `GEOID`, `GEOIDFQ`, `ANSICODE`, `NAME`, `LSAD`, `FUNCSTAT`, `ALAND`, `AWATER`, `ALAND_SQMI`, `AWATER_SQMI`, `INTPTLAT`, `INTPTLONG` | Pipe-delimited text, 536 rows (2024, 2025, and 2026 all inspected). Points only, no polygons, no county field. | 2026 is the latest vintage listed on the Gazetteer page | **No use statement** on the Gazetteer page or in the file. The TIGER grant isn't stated for Gazetteer files, so it isn't assumed to cover them. |
+| iMAP Municipal Boundaries (Generalized / Detailed) | `…/MD_PoliticalBoundaries/FeatureServer/2` and `/5`. Items `bd486d7feeec443c89a822dde5b86a1e`, `92f5b561a1fd4e43b2f9a43fa5ab59c1` | `JURSCODE`, `MUN_NAME` (generalized) | 162 polygons, **incorporated municipalities only**. Misses the CDPs where many Marylanders say they live. | Catalog item modified 2025-05-12 | Same iMAP grant |
+
+**Recommended town source: Census TIGER/Line places, Maryland.**
+- **Why:** it covers incorporated places *and* CDPs (where many rural and suburban hunters and owners would place themselves), provides polygons plus an official internal point, and carries an explicit published use grant.
+- **Vintage:** inspect the 2026 file before adopting it. The 2025 file is the one verified here.
+- **Import:**
+  - Town points are `INTPTLAT`/`INTPTLON`, the Census internal point. It's labeled as an approximate reference point, not a town center.
+  - Each place's county is assigned by testing its internal point against the recommended county source. Places whose polygon crosses a county line keep the county of their internal point, and the listing's own declared county stays authoritative.
+  - Labels use `NAMELSAD` ("Waldorf CDP") internally. The UI shows `NAME` plus the county ("Waldorf, Charles County").
+- **Attribution:** "Source: U.S. Census Bureau, TIGER/Line Shapefiles [year]". Never imply the boundaries are legal or jurisdictional.
+
+**Effect on §6.1 distance bounds:** county bounds use the recommended county polygons. Town buckets are computed from the exact point to the place internal point (§6.1). Both inherit the county-line caution above.
 
 ---
 
@@ -183,7 +279,7 @@ Roles are stored in `RoleAssignment`, never accepted from signup input. `LOCATIO
 - **ListingVersionPrivate** (*separate table, 1:1 with ListingVersion, never selected by public queries*): exact point, optional boundary, access/gate directions, town distance bucket (computed server-side).
 - **StandBlind** (*private, separate table*): listing, name, type, description, private location. Edits are ordinary-private (§4.3).
 - **AvailabilityRange** / **BlackoutDate**: per listing (ordinary fields, §4.3).
-- **ListingReview**: listing version, scope (`GENERAL` / `PRIVATE_LOCATION`), reviewer, decision, notes, at.
+- **ListingReview**: listing version, scope (`GENERAL` / `PRIVATE_LOCATION`), **scope content hash**, reviewer, decision, notes, at (§4.3 rule 6).
 - **PublicArea**, **DataSource**, **ImportRun**: as in §6.2.
 - **SavedProperty**: user + listing or public area.
 - **AccessRequest**: listing, requesting hunter, status (§5.2), current version, current agreement snapshot, `isDemo` (inherited from the listing), idempotency key (unique).
@@ -217,10 +313,11 @@ Roles are stored in `RoleAssignment`, never accepted from signup input. `LOCATIO
 
 **Rules:**
 1. If no review scope is triggered, the version publishes immediately and becomes current.
-2. If any scope is triggered, the version enters `IN_REVIEW`. **The previously published version stays live, and nothing from the pending version is public until it's approved.** A newer edit while one is pending replaces the pending version (the old pending version is marked `WITHDRAWN`).
+2. If any scope is triggered, the version enters `IN_REVIEW`. **The previously published version stays live, and nothing from the pending version is public until it's approved.**
 3. A version is approved only when **every** triggered scope has an approving `ListingReview`. Any rejection returns it to the owner as `CHANGES_REQUESTED`.
 4. A new listing's first version always triggers both `GENERAL` and, if a private location is provided, `PRIVATE_LOCATION`.
-5. Ordinary changes made after a pending version was created are carried into the pending version, so approval never reverts them.
+5. **Submitted versions are immutable.** No edit, including an ordinary one, ever modifies a version after submission. An edit made while a version is pending creates a **new** version: the published content plus the still-pending changes plus the new edit. The old pending version is marked `WITHDRAWN`. An ordinary-only edit also publishes immediately as its own version on top of the current published version.
+6. **Approvals are bound to content.** Each `ListingReview` records the version ID **and a hash of the fields in its scope**. When a new pending version replaces an old one, an approval carries over only if that scope's hash is unchanged. If any field in the scope changed, the approval is invalid and the scope needs review again. Publishing checks the hashes again inside the same transaction, so an approval can't publish content it didn't see.
 
 **Private location review:**
 - Only users with `LOCATION_REVIEWER` see private-location fields, and only in the location-review screen, only for versions with a pending `PRIVATE_LOCATION` scope. Each view creates an audit event recording reviewer, version, and time (not the coordinates).
@@ -389,7 +486,7 @@ Sorting by distance never ranks an approximate listing as though its distance we
 
 - **Outbox pattern:** a business action (request submitted, version opened for signature, completion, reminder due) commits its state change **and** inserts an `EmailOutbox` row in the same transaction. A sender process delivers queued rows. **Retries only re-send the email. They never re-run the business action**, so they can't create duplicate requests, signatures, or documents.
 - **Idempotency keys** are unique per logical message, e.g. `request-submitted:{requestId}:owner`, `signing-invite:{signerId}:{documentVersionId}:{sendNumber}`, `completion:{documentVersionId}:{signerId}`. A duplicate insert is a no-op. If the provider supports idempotency keys (D3, [VERIFY]), the same key is passed through.
-- **Tokens in emails:** raw tokens are never stored in the outbox. A signing or document-access token is minted at send time, and minting **revokes any earlier token for the same signer and version**. If a send is retried after an ambiguous failure, the newest link works and older ones don't. Signature uniqueness (§5.4) prevents double signing regardless.
+- **Tokens in emails (see caution C2, §9):** raw tokens are never stored in the outbox. **A retry must produce the same working link as the original attempt**, because with provider idempotency the provider may deliver the *first* attempt's email and drop the retry. [PROPOSED] Derive the token deterministically: `token = HMAC-SHA256(server secret, accessTokenId + ":" + sendNumber)`. Only its hash is stored, and every retry of the same outbox row recomputes the identical token, so whichever copy is delivered works. **A retry never mints a new token or revokes the old one.** Only an explicit **re-send** (new `sendNumber`, new idempotency key) mints a new token and revokes the previous one. Rotating the server secret invalidates outstanding links (this must be documented in the runbook). Signature uniqueness (§5.4) still prevents double signing.
 - **Duplicate form submissions:** the request form and the signature form both carry an idempotency key or unique constraint. Resubmission returns the existing record.
 - **Retry policy [PROPOSED]:** exponential backoff, at most 5 attempts, then `FAILED` with an in-app notice to the sender ("Email to [name] could not be delivered") and a manual re-send action.
 - **Dependency order:** the outbox and sender (M9) come before location-sharing notifications (M10), signing invitations (M11), and reconfirmation reminders (M12). Request-event emails ship with M9. Request events in M7 are in-app only until then.
@@ -419,7 +516,7 @@ All AI calls are server-side. The key never reaches the client, and the model ne
 
 **Usage controls (enforced by the app, not assumed from provider settings, D9):**
 - **Input limits [PROPOSED]:** NL query ≤ 300 chars. Q&A question ≤ 500 chars. Notes ≤ 4,000 chars. Context fields truncated per field with a marker. A per-feature `max_output_tokens`.
-- **Budget accounting:** an `AiBudget` row per period (day) with a cap, spent, and reserved. Before a call, the server runs **one conditional `UPDATE … SET reserved = reserved + :est WHERE spent + reserved + :est <= cap`**. Zero rows updated means refused. After the call, actual usage moves from reserved to spent. On error or timeout, the reservation is released. This is concurrency-safe without application locks. The cost estimate uses a price table entered from verified pricing (D9).
+- **Budget accounting:** an `AiBudget` row per period (day) with a cap, spent, and reserved. Before a call, the server runs **one conditional `UPDATE … SET reserved = reserved + :est WHERE spent + reserved + :est <= cap`**. Zero rows updated means refused. After the call, actual reported usage moves from reserved to spent. The reservation is released **only when the request provably never reached the provider** (e.g. a connection refused before sending). **On a timeout, client abort, or dropped connection, the full reservation is counted as spent** (see caution C1, §9), because the provider may have processed and billed the request anyway. This is concurrency-safe without application locks. The cost estimate uses a price table entered from verified pricing (D9).
 - **Rate and concurrency limits [PROPOSED]:** per user and per IP, per feature, using atomic counters. At most 2 in-flight AI calls per user.
 - **Kill switch:** a database flag (an admin can toggle it without redeploying) plus an env-var override. When off, AI entry points show "AI assistance is unavailable", and manual search and forms work unchanged.
 - **Failure states:** timeout ([PROPOSED] 10 s), schema failure, validation failure, refusal, budget exhausted, rate-limited, kill switch. Each has a specific message, and none blocks the manual path.
@@ -501,11 +598,11 @@ Each milestone ends with: acceptance checks run and recorded, the diff reviewed 
 
 | # | Milestone | Tier | Est. (h) | Depends on | Acceptance checks |
 |---|---|---|---|---|---|
-| **M0a** | **Read-only feasibility + `AGENTS.md`** (§3.1) | P | 1.5–2.5 | — | §3.1 exit criteria. Codex result recorded. |
+| **M0a** | **Read-only feasibility + `AGENTS.md`** (§3.1). *In progress: `AGENTS.md` created and the DNR/iMAP data check done (§3.4); other rows open; Codex verification pending.* | P | 1.5–2.5 | — | §3.1 exit criteria. Codex result recorded. |
 | M0b | **Account provisioning support**: user creates accounts as each milestone approaches (§2.3). Agent documents setup steps and env-var names. | P | 0.5–1 | M0a | `.env.example` lists names only (no values). Each provider's integration check runs in its milestone. |
 | M1 | **Skeleton + deploy:** Next.js/TS, Prisma, Neon, theme, production deploy | P | 1.5–2.5 | M0a; Neon + hosting accounts | Neon/hosting integration check (§3.2). Data survives a redeploy. *Install + migration approval points.* `.env*` gitignored, and no secrets in Git or the client bundle. |
 | M2 | **Auth + profiles + roles** | P | 1.5–2.5 | M1; auth account | Auth integration check. A signup payload containing a role is ignored (test). A non-admin gets 403 on admin routes, and a non-location-reviewer gets 403 on location review (tests). |
-| M3 | **Public data + browse:** import ≥1 verified source, split map/list, area detail | P | 2.5–3.5 | M1, M0a source; map key | Maps integration check. `ImportRun` recorded. Detail shows source, dates, and notice. Coverage statement uses real counts. Usable at phone width. |
+| M3 | **Public data + browse:** WMA import per §3.4, split map/list, area detail | P | 2.5–3.5 | M1, M0a source; map key | Maps integration check. `ImportRun` recorded. Detail shows source, dates, and notice. No area shows "hunting confirmed" without a recorded DNR-page quote and date (test). A non-JSON or maintenance response fails the run (test). Coverage statement uses real counts. Usable at phone width. |
 | M4 | **Listings + versioned review:** editor, `ListingVersion`, classification, general + location review, approximate placement + bucket, photos, demo seed | P | 3–4.5 | M2; storage (D5 approved) | Storage integration check. Ordinary edit publishes immediately. Location, rules, or authority edit keeps the old version live until all scopes approve. A general admin can't see private location values (test). A public DTO contains no private fields (test). Exact point outside the declared county is flagged. EXIF stripped (test). |
 | M5 | **Search filters:** §6.1 filters, confirmed/unconfirmed, distance bounds, unresolved-input handling | P | 2–3 | M3, M4 | Fixture tests: unconfirmed hidden by default and shown with the toggle; county and bucket bounds correct; non-defensible placements in the separate group; ambiguous manual input stays unresolved. |
 | M6 | **AI: NL → filters, with usage controls and failure paths** (§6.6) | **P (critical path, before signing)** | 2–3 | M5; OpenAI key | OpenAI integration check. NL→filters acceptance checks in §6.6, all recorded. |
@@ -559,6 +656,14 @@ Arithmetic, P: low 1.5+0.5+1.5+1.5+2.5+3+2+2+2.5+1+1.5 = 19.5; high 2.5+1+2.5+2.
 | Small commits | Approved commits per milestone |
 | One caught agent mistake | Logged in `PROMPT-HISTORY.md` with the diff and the fix |
 | Small live coding-agent change | Chosen and rehearsed in M14, made on a preview deployment |
+
+### Implementation cautions (recorded 2026-10-30)
+
+| # | Caution | Applies to | Spec it changes | Required check |
+|---|---|---|---|---|
+| **C1** | **AI timeouts may still be billed.** A timeout or abort on our side doesn't stop or refund work the provider already did. | M6, M13 | §6.6 budget accounting: a timeout counts the full reservation as spent | Test: a forced timeout leaves `spent` increased by the reservation, not released. The budget-cap test includes timeouts. |
+| **C2** | **Email retries must keep token links working when provider idempotency is used.** The provider may deliver the first attempt and drop the retry, so a retry that mints a new token (revoking the old one) would deliver a dead link. | M9, M11 | §6.5: deterministic per-send token, and retries never mint or revoke | Test: send, simulate an ambiguous failure, retry with the same idempotency key, and the link in **either** attempt's email body validates. An explicit re-send invalidates the earlier link. |
+| **C3** | **Submitted listing versions are immutable, and changed content invalidates affected approvals.** | M4 | §4.3 rules 5–6, `ListingReview` scope hash | Tests: an update to a submitted version is rejected. Editing a field in an approved scope while pending requires that scope to be reviewed again. Editing only an unrelated scope keeps the other scope's approval. Publishing with a stale scope hash fails. |
 
 ### Presentation risks
 
@@ -622,3 +727,5 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
 
 - 2026-10-30, rev 1: initial plan by Claude from the user's brief.
 - 2026-10-30, rev 2: user-requested correction pass. M0 split into read-only research plus per-milestone integration checks. AI NL→filters moved onto the critical path before signing, with ≥3 real testers. Totals recalculated as provisional. Single versioned listing review with a scoped location reviewer. Immutable agreement snapshots and amendments. Three separate document status fields with atomic finalization. Separate document-access tokens and defined guest-signer view. Email outbox with idempotency ahead of signing. App-enforced AI budget, quote-level citation validation, and acceptance checks for all four AI features. Conservative handling of ambiguous search input and distance bounds. Isolated demo flow with an authenticated demo-only fallback. Unverified provider and machine claims reworded as [VERIFY] or dated observations.
+- 2026-10-30, rev 3: M0a started. `AGENTS.md` created (Codex verification pending). DNR/iMAP public-data findings recorded (§3.3–3.4): the iMAP `MD_ProtectedLands` layer 0 WMA subset is the initial source, the DNR Hunting Atlas service was not found, the dataset doesn't identify hunting access, and reuse terms aren't explicit. Implementation cautions C1–C3 added, with fixes to §4.3 (immutable versions, hash-bound approvals), §6.5 (retry-stable token links), and §6.6 (timeouts count as spent).
+- 2026-10-30, rev 4: Removed the unsupported conclusion that unclear reuse terms were "fine for the presentation with attribution". Reuse permission is recorded as UNRESOLVED. The official iMAP catalog item for the DNR lands layer was found, and its `licenseInfo` contains an explicit distribution / derived-data grant, kept separate from its no-warranty disclaimer. Pending user acceptance, so no written letter is assumed. HTTP availability, content accuracy, freshness, and reuse are now recorded as separate questions. Added §3.5: county boundaries (recommended iMAP Political County Boundaries, Baltimore City as FIPS `24510`) and town/place reference (recommended Census TIGER/Line Maryland places, which has an explicit Census use grant). D7 updated.
