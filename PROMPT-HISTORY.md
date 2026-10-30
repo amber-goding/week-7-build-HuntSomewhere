@@ -695,3 +695,14 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Asked:** Commit as "feat: discover public areas from saved trip counties", then on `main` run `pull --ff-only`, `merge --ff-only feat/public-area-discovery`, and `push origin main` to trigger Railway. Stop on any failure or divergence. No reset, force-push, `feat/auth-foundation` merge, DB change, or AI calls.
 - **Railway:** whether the deploy succeeded is **not verified** here.
 - **Check failure caught and fixed (user-approved):** the first `git diff --cached --check` failed. The preserved `layer_metadata.xml` keeps the CRLF line endings it was downloaded with, and Git reported each CR as trailing whitespace. Editing the file would break §3.6 R1 and its recorded hash. Instead, `.gitattributes` now reads `data/sources/** -text -whitespace`. The re-run check is clean, and all four staged source blobs still match the SHA-256 values in `PROVENANCE.md`.
+
+### 34. [Claude] Fix: primary-button hover text vanished in dark mode (`fix/button-hover-demo`)
+
+> Entries 31–33 are on the local branch `feat/clerk-integration` (checkpoint `668444d`, not merged). Numbering continues so entry numbers stay unique.
+
+- **Asked:** On `fix/button-hover-demo` (created from `main` `f5f10bd`, entry 33), fix button hover colors so buttons stay distinct from the background with readable text. Keep keyboard focus and limit the change to styling. Run lint and build, show the diff, then commit, fast-forward `main`, and push. No force-push and no Clerk merge.
+- **Cause (verified in the built CSS):** `.hover\:bg-forest-deep:hover` (class + pseudo-class) out-ranks `.dark\:bg-cream` (class only). So in dark mode, hovering the primary buttons turned the background forest-deep while the text stayed `dark:text-forest-deep`. **The contrast was 1.00:1, and the label vanished.**
+- **Fix:** `dark:hover:bg-cream-deep` on the three primary buttons: "Suggest preferences with AI" and "Save trip" (`app/plan/trip-planner.tsx`), and "Discover public areas" (`app/trips/[id]/page.tsx`). The new rule has equal specificity and comes later in the CSS, inside the dark and `hover:hover` media queries only.
+  - Dark-mode hover is now 10.07:1 for the text, and 12.68:1 between the button and the page.
+  - Light mode, the chips, and the landing call-to-action were checked and left unchanged. Focus outlines were untouched (nothing removes them).
+- **Verified:** lint and build pass, and the rule order and selector were confirmed in the built CSS. Contrast was computed with the WCAG formula. The live hover behavior hasn't been checked by the agent; the user will verify it on Railway.

@@ -64,7 +64,7 @@ async function TripDetails({ params }: { params: Promise<{ id: string }> }) {
       </p>
       <Link
         href={`/trips/${trip.id}/areas`}
-        className="inline-block rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep dark:bg-cream dark:text-forest-deep"
+        className="inline-block rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep dark:bg-cream dark:text-forest-deep dark:hover:bg-cream-deep"
       >
         Discover public areas
       </Link>

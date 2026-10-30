@@ -144,7 +144,7 @@ export function TripPlanner() {
             type="button"
             onClick={suggest}
             disabled={suggesting || description.trim().length < 3}
-            className="rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep disabled:opacity-50 dark:bg-cream dark:text-forest-deep"
+            className="rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep disabled:opacity-50 dark:bg-cream dark:text-forest-deep dark:hover:bg-cream-deep"
           >
             {suggesting ? "Suggesting…" : "Suggest preferences with AI"}
           </button>
@@ -228,7 +228,7 @@ export function TripPlanner() {
           type="button"
           onClick={save}
           disabled={saving}
-          className="mt-4 rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep disabled:opacity-50 dark:bg-cream dark:text-forest-deep"
+          className="mt-4 rounded-md bg-forest px-4 py-2 text-sm font-medium text-cream hover:bg-forest-deep disabled:opacity-50 dark:bg-cream dark:text-forest-deep dark:hover:bg-cream-deep"
         >
           {saving ? "Saving…" : "Save trip"}
         </button>
