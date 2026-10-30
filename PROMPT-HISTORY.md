@@ -124,3 +124,52 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Done:** Read all four instruction and planning files in full. Updated `project-plan.md` to revision 5, marked Codex discovery verified in §1 and §3.3, documented the Claude-specific logging equivalent, removed the pending-verification wording from the M0a status and milestone row, and added the revision-5 change-log entry.
 - **Verified:** Project is HuntSomewhere. The plan is `project-plan.md`; the shared log is `PROMPT-HISTORY.md`, using numbered session entries with agent-tagged headings and labeled bullets. Approval rules remain: explicit user approval before any package install, migration, or commit; milestones end with acceptance evidence, review, logging, and an approval stop. Current milestone is M0a, still in progress because other research rows remain open. No research, packages, application code, migrations, or commits were performed.
 - **Next:** Continue the remaining M0a research only when the user requests it.
+
+### 8. [Claude] M0a: species/equipment taxonomy + written-permission requirement
+
+- **Asked:** Research only Maryland species/equipment taxonomy and written-permission requirements from current official DNR and legislative sources. Recommend filter values keeping species, equipment, season rules, property restrictions, and availability separate. Flag ambiguous terms (including white-tailed vs. sika). No season engine. Record permission requirements with dated links, separating explicit requirements from product choices. No sufficiency claim. No installs, code, migrations, or commits.
+- **Context:** Codex had verified instruction discovery (entry 7, plan rev 5). The plan header still listed 3 commits, while `git log` showed 5, so it was corrected.
+- **Findings (read 2026-10-30):**
+  - **NR §10-411 (2026 session text, `mgaleg.maryland.gov/2026RS/Statute_Web/gnr/10-411.pdf`):**
+    - (a) written permission of the landowner or the landowner's agent or lessee is required to hunt on another's land. (b) hunter liable for damage. (c) landowner not liable for accidental injury. (d) Harford County misdemeanor, $25–$250.
+    - **No form, content, carry, or electronic-signature rule.**
+    - The 2025 session PDF has a different file hash, and its text wasn't compared.
+  - **Secondary sources found but not relied on:** the DNR 2026–2027 guide says "property owner" written permission in all counties (the statute is broader). The bear page says "Written permission is required." An undated FindLaw county list conflicts with current statute.
+  - **DNR permission form gone from its URL:** the COMPASS form URL now 301-redirects to `mdoutdoors.maryland.gov`, and the form wasn't located.
+  - **SB 582 (2022)** amended NR Title 5 liability sections, not §10-411.
+  - **Taxonomy (DNR 2026–2027 guide, pages updated 2026-09-30 to 10-14):**
+    - **Sika deer is separate from white-tailed** (own limits, Sika Deer Stamp, different "antlered" definition, lower Eastern Shore).
+    - Deer devices: vertical bow, crossbow, muzzleloader, shotgun, rifle, handgun, air gun. Rifles and handguns are split by straight-walled vs. bottleneck cartridge, with bottleneck area-restricted.
+    - Closed or excluded: bobcat, Delmarva fox squirrel, trapping-only furbearers.
+    - The turkey and falconry pages weren't read.
+- **Decisions (proposed):**
+  - Two-level species values. Equipment values that avoid season names, with "Archery" and "Firearms" as UI groups only.
+  - Ambiguous-term table: bow, archery, gun/firearm, rifle, muzzleloader, primitive, deer, buck/doe, fox, squirrel, goose, and group words.
+  - Five-concept separation table.
+  - Product choices P1–P6, including aligning the poster relationship with the statute's roles (landowner / agent / lessee) in M4, and document wording that disclaims sufficiency.
+  - Open legal questions L1–L5, including whether electronic signatures count as "written". Maryland e-transactions law was not reviewed.
+- **Done:** `project-plan.md` rev 6 (header, §3.3 rows, M0a status, new §3.7 and §3.8, change log).
+- **Verified:** the statute text was read from the official PDF. DNR guide content was read via page fetches (summarized, with short quotes). The sika distribution comes from a search excerpt of the DNR page, not a full fetch. No season eligibility is computed or implied.
+- **Not done:** federal hunting lands, PAD-US, county/municipal hunts, provider docs. Nothing installed, migrated, or committed.
+- **Next:** provider documentation review (D1–D5, D9), the last M0a item that M1 and M2 depend on.
+
+### 9. [Claude] Correction pass on §3.7 taxonomy and §3.8 permission
+
+- **Asked:** Correct only the new taxonomy and permission sections:
+  - broad searches expand groups instead of forcing clarification;
+  - separate species from groups, and split raccoon from opossum;
+  - scope equipment rules to their source species, keep turkey and falconry unconfirmed, and never infer compatibility from owner statements;
+  - reword legal-absence claims without promising liability protection;
+  - remove the E7 safety-distance summary;
+  - keep capacity separate from organization type.
+  No new research, code, installs, migrations, or commits.
+- **Redirections from entry 8 (what was wrong, and the fix):**
+  - **Ambiguity handling:** entry 8 required clarification chips for terms like "deer" and "bow", which blocked broad discovery. Now defined groups expand to visible, editable member chips, and clarification is required only for access requests, AI listing drafts, or date intent. Undefined words ("predators", "varmints", "birds") stay unresolved, with suggestions. §6.1's bullet and the §6.6 NL→filters acceptance check were updated to match, as the request required consistency.
+  - **Species vs. groups:** entry 8 stored `ducks`, `squirrel`, `fox`, `raccoon_opossum`, and `rails` as if they were species. Now every value has a `species` or `group` kind. Squirrels, foxes, and rails are split into member species, `raccoon` and `opossum` are separate, and `ducks`, `light_geese`, `coots`, `quail`, and `crow` are labeled groups because the sources don't name single species.
+  - **Equipment scope:** entry 8's device notes read as universal. They're now labeled "For deer (DNR guide)", with a compatibility table: deer is sourced, turkey and falconry are unconfirmed, and bear, small game, migratory birds, and furbearers are "not established by the sources reviewed". Owner species + method statements are property restrictions only, and a combination is confirmed for matching only when the owner records methods per species.
+  - **Legal wording:** "the sources do not specify" became "§10-411 does not specify…", plus "not established by the sources reviewed", noting that other law may address these points. The full (c) quotation is restored, with "no statement or promise about liability". FindLaw is described by what §10-411(a) does not specify, not by a legal conclusion.
+  - **E7 removed** (safety distances and field permissions under §10-410(g)/(h)).
+  - **P1:** capacity (landowner / agent / lessee) is now a separate field from organization type (individual / hunting club), proposed to replace §4.2's single relationship value in M4.
+- **Done:** `project-plan.md` §3.7 body, §3.8, the §3.3 permission row, the §6.1 ambiguity bullet, the §6.6 acceptance check, and a change-log note under rev 6.
+- **Verified:** `git diff --check` was run (result reported to the user). No new sources were consulted, and all content comes from the sources already recorded in entry 8.
+- **Not done:** nothing installed, migrated, or committed. The remaining M0a rows are unchanged.

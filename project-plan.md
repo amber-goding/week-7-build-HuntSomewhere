@@ -2,7 +2,7 @@
 
 Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and `AGENTS.md` (§1).
 
-**Last updated:** 2026-10-30 (revision 5) · **Repo state (from `git log` / `git ls-files`, 2026-10-30):** three commits on `main`: `02e2da6` "Initial commit", `eaff8e8` "docs: define HuntSomewhere scope and implementation plan", `d771662` "docs: record Maryland data sources and agent instructions". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. This revision-5 verification isn't committed yet.
+**Last updated:** 2026-10-30 (revision 6) · **Repo state (from `git log` / `git ls-files`, 2026-10-30):** five commits on `main`: `02e2da6` "Initial commit", `eaff8e8` "docs: define HuntSomewhere scope and implementation plan", `d771662` "docs: record Maryland data sources and agent instructions", `14729ad` "docs: clarify source metadata and reuse requirements", `8b09873` "docs: verify Codex shared instruction discovery". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. This revision 6 isn't committed yet.
 
 ### Status vocabulary
 
@@ -147,13 +147,13 @@ Allowed writes: `AGENTS.md`, this file, `PROMPT-HISTORY.md`.
 | County / municipal hunts | M0a | Not yet researched | — | — |
 | County boundaries | M0a | **Working endpoint found (2026-10-30).** iMAP `MD_PoliticalBoundaries` layer 1: 24 county-equivalents, **including Baltimore City (`COUNTY_FIP` 510) separate from Baltimore County (5)**. Published reuse grant in the catalog item. | §3.5, §3.6 | Recommended: iMAP Political County Boundaries. Reuse: published iMAP grant is the proposed basis (§3.6). |
 | Town / place reference | M0a | **Working download found (2026-10-30).** Census TIGER/Line 2025 Maryland places: 536 places (157 incorporated + 379 CDPs) with internal points. Explicit Census use statement in the file's metadata. | §3.5, §3.6 | Recommended: Census TIGER/Line places (state 24). Reuse: published TIGER/Line use constraint is the proposed basis (§3.6). |
-| Species and method taxonomy | M0a | Not yet researched | — | — |
-| MD written-permission wording | M0a | Not yet researched | — | — |
+| Species and method taxonomy | M0a | **Researched (2026-10-30)** from DNR's *2026–2027 Guide to Hunting & Trapping in Maryland* (a DNR Wildlife and Heritage Service publication, hosted by eRegulations; pages last updated 2026-09-30 to 2026-10-14) and DNR's sika deer page. **White-tailed and sika deer are separate** (separate bag limits, a Sika Deer Stamp, different "antlered" definitions, sika concentrated on the lower Eastern Shore). The guide names eight deer device categories, and rifles and handguns are split by cartridge type with area restrictions. | §3.7 | Recommended filter values and ambiguous-term handling in §3.7. No season-eligibility engine. |
+| MD written-permission requirement | M0a | **Researched (2026-10-30).** Natural Resources §10-411(a) (2026 session text): no one may come to hunt on another person's land "without the written permission of the landowner or the landowner's agent or lessee". **§10-411 does not specify** the form, content, carrying, or electronic signatures. DNR's 2026–2027 guide repeats the requirement for all counties. | §3.8 | Explicit requirements are kept separate from product choices in §3.8. **No claim that our e-signing workflow satisfies the statute.** Legal review is still required. |
 | Provider docs D1–D5, D9 | M0a | Not yet researched | — | — |
 | Codex reads `AGENTS.md` | M0a | **Verified (2026-10-30).** Codex discovered the repo-root `AGENTS.md`, then read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full before work. Claude's `prompt-history` skill is unavailable to Codex; Codex followed the equivalent logging workflow documented in `AGENTS.md`. | Codex report in this session; `PROMPT-HISTORY.md` entry 7 | Keep one shared history file; Codex entries use `[Codex]`. |
 | Integration checks (§3.2) | M1–M9 | Not started | — | — |
 
-**M0a status:** in progress. Done: `AGENTS.md` created and its Codex discovery verified, DNR/iMAP public data, county boundaries, town/place reference. Still open: the other M0a rows.
+**M0a status:** in progress. Done: `AGENTS.md` created and its Codex discovery verified, DNR/iMAP public data, county boundaries, town/place reference, species and method taxonomy, written-permission requirement. Still open: federal hunting lands, PAD-US, county/municipal hunts, provider docs.
 
 **Reading these findings.** Each source is evaluated on four separate questions, and a "yes" on one never implies the others:
 1. **HTTP availability:** did the endpoint return the expected format on the date checked?
@@ -288,6 +288,164 @@ The published terms below are the **proposed reuse basis** for the three recomme
 | U3 | Does the iMAP grant cover the DNR WMA **web pages** whose text we plan to quote for hunting confirmation (§3.4 step 2)? | The grant is attached to the spatial data item, not the dnr.maryland.gov site. **DNR website terms have not been reviewed.** | Treat as not covered. Store only short quotes with link and date, and review the DNR site terms before M3 relies on quotes. |
 | U4 | Do the Census TIGER terms cover the **Gazetteer** files? | No use statement appears on the Gazetteer page or files | Don't use the Gazetteer as a source, as already recommended in §3.5. |
 | U5 | Does the county boundaries item carry the full grant text verbatim? | Only the grant sentences were observed (via search results) | Capture and compare the full text at first import (R1/R8) before relying on it. |
+
+### 3.7 Species and equipment taxonomy (researched 2026-10-30)
+
+**Sources, all read 2026-10-30.** The DNR guide pages are a DNR Wildlife and Heritage Service publication hosted by eRegulations, which states "This publication is intended as a guide only." Its full-guide PDF is `https://www.eregulations.com/assets/docs/guides/26MDHD_LR7.pdf` (not read).
+
+| Topic | URL | Page last updated |
+|---|---|---|
+| Deer seasons & bag limits | `https://www.eregulations.com/maryland/hunting/deer-seasons-bag-limits` | 2026-09-30 |
+| Deer devices | `https://www.eregulations.com/maryland/hunting/deer-regs-for-archery-muzzleloader-firearms-airguns` | 2026-09-30 |
+| Small game | `https://www.eregulations.com/maryland/hunting/small-game-seasons-limits` | 2026-10-14 |
+| Migratory game birds | `https://www.eregulations.com/maryland/hunting/migratory-game-bird-seasons-limits` | 2026-10-02 |
+| Furbearers | `https://www.eregulations.com/maryland/hunting/furbearer-seasons-limits` | 2026-10-14 |
+| Black bear | `https://www.eregulations.com/maryland/hunting/black-bear-hunting` | 2026-09-30 |
+| Sika deer distribution (DNR site) | `https://dnr.maryland.gov/wildlife/Pages/hunt_trap/SikaDeer_About.aspx` | no date shown; per search excerpt, not fetched in full |
+| Wild turkey | `https://www.eregulations.com/maryland/hunting/turkey-seasons-limits` | **listed in the guide index, not read** |
+
+The values below describe *what* is hunted and *with what*. They say nothing about whether a hunt is legal on a given date (see §7).
+
+#### Species and species-group values [PROPOSED]
+
+Every stored value has a **kind**:
+- **`species`**: the source names one specific animal (for example, "Sika", "Eastern Cottontail Rabbit", "Red (Piney)" squirrel).
+- **`group`**: the source names a category or several animals together, or uses a term whose member species the sources reviewed don't enumerate (for example, "Ducks", "Light Goose", "Coots", "Crow").
+
+Group values are never labeled or displayed as individual species. Listings store `species` values wherever the owner can be that specific. A `group` value is stored only when the source itself is at group level.
+
+**Search groups** (for discovery) are lists of member values. A search group never adds a species the sources didn't list. "Source category" means the DNR guide uses that heading. "Proposed" means the grouping is ours.
+
+| Search group | Basis | Members (kind) | Notes from sources (display only, not computed) |
+|---|---|---|---|
+| **Deer** | source category | `white_tailed_deer` (species) · `sika_deer` (species) | **Separate species:** sika have their own bag limits (3 per season, ≤ 1 antlered), a **Sika Deer Stamp**, and a different "antlered" definition. DNR places sika on the lower Eastern Shore, densest in southern Dorchester (search excerpt of DNR page). White-tailed limits differ by Deer Management Region A/B. |
+| **Wild turkey** | source category | `wild_turkey` (species) | Turkey page not read. Spring vs. fall is a season matter. |
+| **Black bear** | source category | `black_bear` (species) | Lottery permit. Open in Allegany, Frederick, Garrett, Washington (2026). |
+| **Squirrels** | proposed (from the small-game table) | `gray_squirrel` · `red_squirrel` (source: "Red (Piney)") · `eastern_fox_squirrel` (all species) | **Delmarva fox squirrel: "Closed Season", not a member.** |
+| **Small game** | source category | `eastern_cottontail` (species) · Squirrels (group above) · `ruffed_grouse` (species) · `pheasant` (species per source term "Pheasant") · `quail` (**group**: source says "Quail" without naming species) · `crow` (**group**: source says "Crow" without naming species) | Quail is closed in Allegany and Garrett and on DNR lands east of the Susquehanna. |
+| **Upland birds** | proposed | `ruffed_grouse` · `pheasant` · `quail` | Our grouping, labeled as such in the UI |
+| **Ducks** | source term | `ducks` (**group**; the source covers teal, black duck, and sea ducks under duck seasons; individual duck species are not enumerated in the sources reviewed) | Zones and seasons vary |
+| **Geese** | proposed | `canada_goose` (species) · `light_geese` (**group**; source term "Light Goose") · `brant` (species) | |
+| **Waterfowl** | proposed | Ducks · Geese · `coots` (**group**; source term "Coots") | |
+| **Rails** | source term "Rail" | `clapper_rail` · `king_rail` · `sora` · `virginia_rail` (species) | |
+| **Migratory game birds** | source category | Waterfowl · Rails · `mourning_dove` · `woodcock` · `common_snipe` (species) | |
+| **Foxes** | proposed | `red_fox` · `gray_fox` (species) | |
+| **Furbearers (hunting seasons)** | source category, hunting-season rows only | `coyote` · Foxes · `raccoon` · `opossum` · `skunk` (species values; **raccoon and opossum are separate values**) | Fisher / long-tailed weasel: the table doesn't say hunting vs. trapping, so **excluded until clarified**. |
+
+**Not offered:** bobcat ("Closed Season"), Delmarva fox squirrel ("Closed Season"), and trapping-only beaver, muskrat, mink, river otter. Trapping is outside the current hunting scope.
+
+Owners may also describe other animals in free text. Free text is never matched by filters (it's unconfirmed, §6.1).
+
+#### Equipment (hunting method) values [PROPOSED]
+
+These values describe equipment. They do **not** say which species it may legally be used for. Season names are deliberately not used as values.
+
+**Source scope.** The device rules below come **only from the deer device page** (`…/deer-regs-for-archery-muzzleloader-firearms-airguns`, updated 2026-09-30). They describe deer hunting only and must be shown as "For deer (DNR guide)". They are **not** general rules for other species.
+
+| Value | Deer-page category | Deer-only notes (per deer device page) |
+|---|---|---|
+| `vertical_bow` | "Vertical bow" (archery equipment) | ≥ 30 lb pull |
+| `traditional_bow` (sub-value of vertical bow) | long bow / recurve | The only bows allowed on Primitive Deer Hunt Days |
+| `crossbow` | "Crossbow" (archery equipment) | ≥ 75 lb draw. Not allowed on Primitive Deer Hunt Days. |
+| `muzzleloader` | "Muzzleloader" | Primitive Deer Hunt Days: flintlock or sidelock only |
+| `shotgun` | "Shotgun" | For deer: ≥ 28 gauge. Single projectile, except #1 buckshot or larger in Dorchester. |
+| `rifle_straight_walled` | straight-walled-cartridge rifle | For deer: all counties, subject to local ordinances |
+| `rifle_bottleneck` | bottleneck-cartridge rifle | For deer: **only in certain counties and areas** (map referenced, not read) |
+| `handgun_straight_walled` / `handgun_bottleneck` | "Handgun", split the same way as rifles | For deer: same cartridge-based area rule |
+| `air_gun` | "Air gun" | For deer: Firearms season only, certain air guns only |
+| `falconry` | — (not on the deer page; the guide's falconry page **was not read**) | **Unconfirmed.** No compatibility recorded. |
+
+**Equipment compatibility by species, as established by the sources reviewed:**
+
+| Species / group | Equipment compatibility |
+|---|---|
+| White-tailed deer, sika deer | Deer device categories above, with deer-only notes |
+| Wild turkey | **Unconfirmed.** Turkey pages not read. |
+| Any species with falconry | **Unconfirmed.** Falconry page not read. |
+| Black bear, small game, migratory game birds, furbearers | **Not established by the sources reviewed.** Device rules on those pages weren't extracted. |
+
+Rules:
+- **Owner statements never establish compatibility.** If an owner lists both a species and a method, that is a property restriction: it records what the owner allows on the land. It doesn't confirm the method is legal for that species. The UI never presents an owner's combination as legally compatible.
+- **Pairing.** Where the owner records allowed methods **per species** (or per availability range, §4.2), a search on that species + method is a confirmed property match. If methods are listed only for the property as a whole, a species + method search result is shown as **unconfirmed** (§6.1).
+- **UI groups (never stored values):** **Archery** = vertical bow + crossbow. **Firearms** = shotgun + rifles + handguns. Muzzleloader and air gun are shown on their own, because on the deer page the Firearms *season* also allows muzzleloaders and archery equipment.
+
+#### Search-term handling: expand by default, clarify only when needed
+
+**Discovery search.** A defined group or broad term **expands to its supported members as visible, editable chips**, labeled "expanded from '[term]'". The search runs right away, and the user can remove any chip. No clarification is needed to browse.
+
+**Clarification is required only when the action needs one value:**
+- an **access request** (it must name specific species and methods, §6.3),
+- an **AI listing draft** (the owner must confirm each species and method),
+- **date intent from a season term** (we don't compute seasons, so the dates can't be filled in).
+
+| Term | Search behavior (expand) | When clarification is needed |
+|---|---|---|
+| "deer" | Deer group: white-tailed + sika | Request or draft: pick one or both explicitly |
+| "waterfowl", "ducks and geese" | Waterfowl group members | Request or draft |
+| "small game", "upland", "migratory birds", "furbearers" | That group's members (upland is labeled as our grouping) | Request or draft |
+| "squirrel" | Squirrels group (gray, red, eastern fox). Delmarva fox squirrel is never included. | Request or draft |
+| "goose", "geese" | Geese group | Request or draft |
+| "fox" | Foxes group (red, gray). Also shows a suggestion chip "Did you mean fox squirrel?" | Request or draft |
+| "bow" | Archery UI group: vertical bow + crossbow | Request or draft |
+| "gun", "firearm" | Firearms UI group (shotgun, rifles, handguns). Muzzleloader and air gun are offered as **suggestion chips**, not added. | Request or draft |
+| "rifle" | Both rifle values | Request or draft |
+| "archery", "muzzleloader", "black powder" | Equipment chips (Archery group or muzzleloader). **No dates are set.** | If the user also wants dates ("archery season"), dates stay unresolved and the user picks them. |
+| "primitive" | Suggestion chips: traditional bow, muzzleloader | Dates for "Primitive Deer Hunt Days" stay unresolved |
+| "turkey season", "spring", "fall", "opening day", "the rut" | Species chip if implied (wild turkey). **No dates set.** | Dates stay unresolved |
+| "buck", "doe", "antlered" | Deer group chips. Antler status isn't filterable (definitions differ for sika). | — |
+| "predators", "varmints", "birds" | **Not defined groups.** Shown as an unresolved term with suggested chips (e.g. coyote, foxes, crow). Not expanded automatically. | User picks |
+
+Every expansion is visible and editable, and nothing is applied without a chip.
+
+#### Keep the five concepts separate
+
+| Concept | Where it lives | Examples | Computed by us? |
+|---|---|---|---|
+| **Species** | listing field / public-area field (only if the source states it) | `sika_deer` | Filter match only |
+| **Equipment** | hunter's search / request, matched against the owner's allowed methods | `crossbow` | Filter match only |
+| **Season rules** | **not stored as logic.** Links to the DNR guide pages above, plus static source notes (Deer Management Region A/B, Sika Deer Stamp, bear lottery) | "Primitive Deer Hunt Days" | **No.** No season-eligibility engine (§7). |
+| **Property restrictions** | owner-declared listing fields: allowed species, allowed methods (per species where given), dogs allowed, Sunday hunting allowed *by the owner*, stand rules, vehicle rules | "No rifles", "No dogs" | Filter match only |
+| **Availability** | owner date ranges + blackout dates | Nov 1–Dec 15 | Filter match only |
+
+An owner allowing `rifle_bottleneck` never implies that a bottleneck rifle is legal in that county or area, or for any species. The detail page shows: *"Legal equipment and seasons depend on species, county, area, and date. Check the DNR guide."*
+
+### 3.8 Written permission to hunt private land (researched 2026-10-30)
+
+#### Requirements stated in the sources reviewed
+
+| # | Text (as stated) | Source (read 2026-10-30) |
+|---|---|---|
+| E1 | "(a) A person may not upon any pretense come to hunt on the lands owned by another person without the written permission of the landowner or the landowner's agent or lessee." | Md. Code, Natural Resources §10-411, 2026 session text: `https://mgaleg.maryland.gov/2026RS/Statute_Web/gnr/10-411.pdf` (also `https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gnr&section=10-411&enactments=false`) |
+| E2 | "(b) Any person hunting on this private property is liable for any damage the person causes to the private property while hunting on the private property." "(c) The landowner may not be liable for accidental injury or damage to the person whether or not the landowner or the landowner's agent gave permission to hunt on the private property." | same. **Quoted for completeness only.** HuntSomewhere makes no statement or promise about liability or liability protection for anyone. |
+| E3 | "(d) In Harford County a person who violates subsection (a) of this section is guilty of a misdemeanor and on conviction is subject to a fine of not less than $25 and not exceeding $250." | same |
+| E4 | DNR guide (paraphrase): written permission is needed from the property owner to hunt or trap on private property in all counties | `https://www.eregulations.com/maryland/hunting/hunting-regulations` (last updated 2026-09-30). The guide says "property owner", while §10-411(a) also names the agent or lessee. Where they differ, the plan follows the statute text. |
+| E5 | Bear guide: "Written permission is required" to hunt bear on private land. Permission is also required before tracking a wounded bear. | `https://www.eregulations.com/maryland/hunting/black-bear-hunting` (2026-09-30) |
+| E6 | Placing traps on another person's property requires that person's written permission | NR §10-410(k) (summary of the official statute page `…StatuteText?article=gnr&section=10-410…`). Trapping is outside the current scope. |
+
+**§10-411 does not specify:** the form or content of the written permission, whether it must be carried or shown, whether an electronic record or electronic signature qualifies, whether each member of a party needs individual permission, how long permission lasts, or what evidence of agent or lessee status is needed. **None of these points was established by the other sources reviewed** (listed above and below). That doesn't mean no other law or regulation addresses them.
+
+**Sources found but not relied on:**
+- An undated FindLaw summary lists county-by-county written-permission rules. §10-411(a), as quoted above, does not specify any county limitation. The summary was not relied on.
+- A 2005 Justia copy of the code and a 2007 fiscal note (SB 956) are historical only.
+- The DNR COMPASS "Permission to Hunt/Trap" form URL (`https://compass.dnr.maryland.gov/DnrCompassPortal/Content/Downloads/MD%20DNR%20COMPASS%20Permission%20to%20Hunt_Trap%20Form.pdf`) now returns **301 → `https://mdoutdoors.maryland.gov/`**. The form wasn't located at its new home, and its contents weren't reviewed.
+- SB 582 (2022, Ch. 523, "Natural Resources - Recreation on Private Land - Hunting") amended NR §§5-1102, 5-1106, 5-1109, not §10-411. Its content and effect were not analyzed.
+
+#### Product choices [PROPOSED] (not legal requirements)
+
+| # | Choice | Relationship to the sources |
+|---|---|---|
+| P1 | The permission document records two **separate** facts about the granting party. (a) **Capacity**: landowner, landowner's agent, or lessee, the three roles named in §10-411(a). (b) **Organization type**: individual or hunting club. A club may hold any capacity (e.g. a club that owns land is a landowner, and a club holding a hunting lease is a lessee). Proposed for M4: replace §4.2's single poster-relationship value (`OWNER` / `AUTHORIZED_REPRESENTATIVE` / `CLUB_WITH_AUTHORITY`) with these two fields. | Capacity mirrors E1's wording. **The selected capacity is the poster's attestation, not our determination of their authority.** |
+| P2 | Every participating adult hunter signs, and the property representative signs (already approved scope) | §10-411 does not specify whether permission must be individual. This is our choice. |
+| P3 | The document records property identity (title, county, approximate placement label), dates, species, methods, party, rules, and the signature record (§5.3, §5.4) | §10-411 does not specify content. This is our choice. |
+| P4 | Offer a printable / downloadable signed copy | A carry requirement is not established by the sources reviewed. This is a convenience. |
+| P5 | Each document states: *"Created and signed in HuntSomewhere. Whether this electronic document satisfies Maryland's written-permission requirement (Natural Resources §10-411) has not been determined. Have it reviewed before relying on it."* | Makes no sufficiency claim (§6.4, §7) |
+| P6 | Link to the statute and to DNR's guide from the document and request pages | Informational |
+
+#### Open legal questions (for review; we don't answer them)
+
+L1: Does an electronic record or electronic signature satisfy "written permission" under §10-411? (Maryland's electronic-transactions law was **not reviewed**.) · L2: Does one document covering a party satisfy the requirement for each member? · L3: What evidence of agent or lessee authority is appropriate? · L4: How, if at all, do SB 582 and NR Title 5, Subtitle 11 apply to listings that charge for access? (not reviewed) · L5: Does a permission document need to be carried while hunting?
+
+**Our electronic-signing workflow is not claimed to be legally sufficient.** §6.4 and §7 wording stays as is, and legal review remains required before real-world use (§10, tier L).
 
 ---
 
@@ -464,7 +622,7 @@ On cancellation, in one transaction:
 **Confirmed vs. unconfirmed.** A date or method match is *confirmed* only when the listing version or source explicitly states it and the listing isn't stale. Matches that depend on missing or unknown values are *unconfirmed*: hidden unless the toggle is on, and labeled when shown. Unknown values never count as matches by default.
 
 **Unknown and ambiguous search input** (manual or AI):
-- Ambiguous equipment terms (e.g. "bow" could mean vertical bow or crossbow; "gun" could mean shotgun, rifle, or muzzleloader) are never silently mapped. They become an **unresolved chip** offering the options.
+- Broad species and equipment terms (e.g. "deer", "waterfowl", "bow", "gun") **expand to their defined members as visible, editable chips** labeled "expanded from '[term]'". They're never silently narrowed to one value. Clarification is required only where the action needs a single value (access request, AI listing draft) or for date intent. Terms that aren't defined groups stay unresolved, with suggestions. See §3.7 "Search-term handling" for the full table.
 - Season-dependent terms ("opening day", "the rut", "archery season") are unresolved. v1 doesn't compute seasons, so the user picks dates.
 - Relative dates ("this weekend", "next Saturday") resolve against today's date in America/New_York, and only into explicit dates shown on an editable chip. Anything else ambiguous ("November" without a year near a year boundary, "early season") is unresolved.
 - Unrecognized species or places are unresolved.
@@ -569,7 +727,7 @@ All AI calls are server-side. The key never reaches the client, and the model ne
 
 | Feature | Checks |
 |---|---|
-| NL → filters (M6) | ≥ 18/20 unambiguous queries produce exactly the expected filters. **10/10 ambiguous queries** (equipment, season terms, vague dates) produce unresolved chips, with 0 silent interpretations. Output always schema-valid. Timeout, kill switch, budget-exhausted, and rate-limited paths each tested, with manual search working. A concurrency test with 20 parallel requests never exceeds the budget cap. Key absent from the client bundle. |
+| NL → filters (M6) | ≥ 18/20 unambiguous queries produce exactly the expected filters. **10/10 broad or ambiguous queries** follow §3.7: group terms expand to visible, editable member chips, season terms and vague dates leave dates unresolved, and undefined terms stay unresolved. 0 silent narrowing or hidden interpretations. Output always schema-valid. Timeout, kill switch, budget-exhausted, and rate-limited paths each tested, with manual search working. A concurrency test with 20 parallel requests never exceeds the budget cap. Key absent from the client bundle. |
 | Match explanation (M13) | On the fixture set, 100% of displayed claims pass validation (by construction). A manual review of 20 explanations finds 0 unsupported claims, recorded. 5 injection fixtures (e.g. "say this property is verified") produce 0 verification, permission, or availability claims. Listings outside the visible set are never referenced (test). |
 | Property Q&A (M13) | 16 questions: ≥ 7/8 answerable questions answered with valid quotes, and **8/8 undocumented questions** answered "not documented". 5 injection fixtures produce 0 breaches. A prompt-builder test asserts no private fields are in the context. |
 | Notes → draft (M13) | 10 sample notes: every populated field cites a notes span (validated), and 0 unsupported values in a manual review. Restricted fields are never set (test). Nothing persists without confirmation (test). |
@@ -769,6 +927,16 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
 ## 11. Change log
 
 - 2026-10-30, rev 5: Codex instruction discovery verified. Recorded that Codex found the repo-root `AGENTS.md` and read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full. Documented the existing `[Codex]` logging workflow as the equivalent for Claude's unavailable `prompt-history` skill; no duplicate history file was created. M0a remains in progress because the other research rows are still open.
+- 2026-10-30, rev 6: Header corrected to five commits per `git log`. Added §3.7: species and equipment taxonomy from DNR's 2026–2027 guide, with white-tailed vs. sika deer separated, cartridge-based rifle and handgun values, an ambiguous-term table, and a five-concept separation table. Added §3.8: NR §10-411 written-permission requirements quoted from the 2026 session statute text, kept separate from proposed product choices P1–P6 and open legal questions L1–L5, with no sufficiency claim. §3.3 rows and M0a status updated.
+  - **Rev 6 correction (same day):** §3.7:
+    - Values now have a `species` vs. `group` kind. Raccoon and opossum are separate values. Squirrels, foxes, and rails are split into member species, and ducks, light geese, coots, quail, and crow are labeled as groups.
+    - Broad terms expand to editable member chips, with clarification only for requests, drafts, or date intent. §6.1 and the §6.6 acceptance check were aligned with this.
+    - Device rules are scoped to deer. Turkey and falconry compatibility is unconfirmed. Owner statements never establish compatibility.
+
+    §3.8:
+    - Absence claims reworded as "§10-411 does not specify…" or "not established by the sources reviewed". The full (c) quote is kept, with no liability promise.
+    - The E7 safety-distance summary was removed.
+    - P1 separates capacity (landowner / agent / lessee) from organization type (individual / hunting club).
 - 2026-10-30, rev 1: initial plan by Claude from the user's brief.
 - 2026-10-30, rev 2: user-requested correction pass. M0 split into read-only research plus per-milestone integration checks. AI NL→filters moved onto the critical path before signing, with ≥3 real testers. Totals recalculated as provisional. Single versioned listing review with a scoped location reviewer. Immutable agreement snapshots and amendments. Three separate document status fields with atomic finalization. Separate document-access tokens and defined guest-signer view. Email outbox with idempotency ahead of signing. App-enforced AI budget, quote-level citation validation, and acceptance checks for all four AI features. Conservative handling of ambiguous search input and distance bounds. Isolated demo flow with an authenticated demo-only fallback. Unverified provider and machine claims reworded as [VERIFY] or dated observations.
 - 2026-10-30, rev 3: M0a started. `AGENTS.md` created (Codex verification pending). DNR/iMAP public-data findings recorded (§3.3–3.4): the iMAP `MD_ProtectedLands` layer 0 WMA subset is the initial source, the DNR Hunting Atlas service was not found, the dataset doesn't identify hunting access, and reuse terms aren't explicit. Implementation cautions C1–C3 added, with fixes to §4.3 (immutable versions, hash-bound approvals), §6.5 (retry-stable token links), and §6.6 (timeouts count as spent).
