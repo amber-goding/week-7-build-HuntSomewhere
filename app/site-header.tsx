@@ -13,12 +13,20 @@ export function SiteHeader() {
         >
           HuntSomewhere
         </Link>
-        <Link
-          href="/sources"
-          className="rounded-md px-2 py-1 text-sm font-medium text-forest underline-offset-4 hover:underline dark:text-cream"
-        >
-          Sources
-        </Link>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Link
+            href="/plan"
+            className="rounded-md px-2 py-1 text-sm font-medium text-forest underline-offset-4 hover:underline dark:text-cream"
+          >
+            Plan a trip
+          </Link>
+          <Link
+            href="/sources"
+            className="rounded-md px-2 py-1 text-sm font-medium text-forest underline-offset-4 hover:underline dark:text-cream"
+          >
+            Sources
+          </Link>
+        </div>
       </nav>
     </header>
   );

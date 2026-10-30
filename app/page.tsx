@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SiteHeader } from "./site-header";
 
 const audiences = [
@@ -36,6 +37,12 @@ export default function Home() {
               representatives, and hunting clubs, so hunters and landowners can
               connect in one place.
             </p>
+            <Link
+              href="/plan"
+              className="mt-8 inline-block rounded-md bg-cream px-5 py-3 font-semibold text-forest-deep hover:bg-cream-deep"
+            >
+              Plan a trip
+            </Link>
           </div>
         </section>
 
@@ -55,8 +62,9 @@ export default function Home() {
           </ul>
 
           <p className="mt-10 max-w-2xl rounded-xl bg-cream-deep px-5 py-4 leading-7 text-forest-deep dark:bg-surface dark:text-foreground">
-            <strong className="font-semibold">In development.</strong> Search,
-            accounts, listings, and access requests aren&apos;t available yet.
+            <strong className="font-semibold">In development.</strong> Trip
+            planning works today. Search, accounts, listings, and access
+            requests aren&apos;t available yet.
           </p>
         </section>
       </main>

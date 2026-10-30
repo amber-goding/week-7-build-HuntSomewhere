@@ -521,3 +521,125 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
   - M2 prerequisite 1 is now "re-verify Clerk's current production requirements; discuss blockers before considering another provider".
 - **Verified:** `git diff --check` (including `HANDOFF.md`) — see the final report. Leftover-wording scans only match historical change-log lines, the intentional quote of the original criterion, and the new "no automatic fallback" text. No app code, installs, DB operations, commits, or pushes.
 - **Next:** user review. Then the M2 task (Clerk development instance, local only), after re-verifying Clerk's production requirements and approving the pinned `@clerk/nextjs` install.
+
+## Session — 2026-10-30 (second session, after the handoff)
+
+> Entries 21–23 of this session are on branch `feat/auth-foundation` (local checkpoint commit `58e3509`): orientation, M2 Clerk work, and the M2 pause. They aren't on this branch, so numbering continues at 24 to keep entry numbers unique across branches.
+
+### 24. [Claude] Checkpoint M2, create `feat/gate-demo`, propose the Week 7 gate flow
+
+- **Asked:** Pause M2, because the Week 7 gate presentation is the immediate priority.
+  - Checkpoint the auth work locally (user-authorized commit, labeled incomplete, requiring Clerk keys), with no push or merge.
+  - Then switch to `main` and create `feat/gate-demo` without the Clerk changes, stopping rather than discarding anything if the switch isn't clean. Confirm `main` is independent of Clerk.
+  - Read the gate requirements and propose the smallest complete presentation flow: sourced public areas with honest labels, one OpenAI NL → editable-filters feature, DB-backed trips without accounts or personal info, validation, failure handling, server-side secrets, enforced AI controls, deployment, ≥ 3 real users, and a live agent change.
+  - Keep the full plan intact and mark this as temporary. No implementation, installs, DB, or Railway changes.
+- **Redirection:** M2 is paused partway through. Interactive sign-in was never verified (no Clerk keys). The gate track becomes the temporary priority, without changing the marketplace scope.
+- **Checkpoint:** `58e3509` "wip(auth): checkpoint incomplete Clerk integration (requires Clerk keys)" on `feat/auth-foundation`. It is local only and not pushed or merged. Before committing: `.env.local` was confirmed ignored, `.env.example` was confirmed to have 4 names with empty values, and a secret-pattern scan of the whole diff found 0 matches. Only the 11 reviewed files were staged by name. After the commit the tree was clean.
+- **Branch:** `git switch main` was clean. `feat/gate-demo` was created at `829f782`.
+- **Clerk independence of `main` (verified):**
+  - No Clerk references in code or config. `proxy.ts` and the sign-in/up routes are absent, and `package.json` and the lockfile have no Clerk entries.
+  - `npm run build` exits 0. `/` is static again, `/sources` is ◐, and there's no proxy.
+  - Note: `node_modules` still contains the extraneous `@clerk/*` packages from the auth branch. Nothing on this branch imports them, and they were left in place (no npm operations).
+- **Gate requirements source:** the repo has no separate gate document. Requirements come from the user's message and the plan's §9 "Gate evidence" table (persistence, reliable AI, real-user testing, production deployment, reviewed diffs, small commits, a caught agent mistake, a small live agent change).
+- **Plan (revision 18, this branch):**
+  - New §9 "Temporary presentation priority: Week 7 gate demo".
+    - Scope: 6–10 WMAs with an `ImportRun` metadata copy; hunting "Not confirmed" unless quoted after the U3 review; species and methods "Not provided by source".
+    - Trips store validated filters only, with **no raw description**, no names or emails, and no raw IPs.
+    - AI: NL → chips, with code-side validation and group expansion, a daily budget reservation (timeouts count as spent), a kill switch, and hashed per-client limits.
+    - A reduced, labeled eval set.
+    - Sequence G1–G7 with approval points, plus open decisions.
+  - M2 row marked paused, with a pointer to the checkpoint.
+  - §3.3 stale sentence corrected (identical text to rev 17, so a later merge applies cleanly).
+  - The change log notes that rev 17 exists only on `feat/auth-foundation`.
+- **Decisions surfaced (not made):**
+  - Validation/OpenAI client packages (proposal: pinned `zod`, plus `fetch` with no SDK).
+  - The OpenAI model and daily cap, after verifying current models and prices in OpenAI's docs.
+  - Whether to do the U3 DNR site-terms review.
+  - A Neon branch for the budget concurrency test.
+  - The presentation date and time.
+- **Not done:** no gate implementation, installs, DB changes, Railway changes, push, or merge. The rev 18 docs are uncommitted on `feat/gate-demo`.
+- **Next:** user review of the proposal and the open decisions, then G1 (schema preview, with migration approval).
+
+### 25. [Claude] Gate demo: trip description → editable preferences → Neon → random link
+
+- **Asked:** Presentation in under 45 minutes. Build only this flow on `feat/gate-demo`: describe a Maryland trip → AI-structured county, species, method, and dates → review and edit → save to Neon → reopen by an unguessable link.
+  - Authorized: pinned `zod`, a minimal additive migration (after inspecting the SQL, stopping on drops or drift), and a few synthetic test records.
+  - AI requirements: server-side `fetch`, validated output, unresolved terms kept, no seasons, permission, availability, or matches inferred, and the raw description never stored. Limits, safe failures, a timeout, a manual fallback, and an off switch. A durable shared maximum of 10 calls reserved atomically, where failures count. One current model verified, with a cost bound.
+  - No auth or DB provider setup, commit, push, merge, or deploy.
+- **Redirection:** the user cut the rev 18 gate proposal (areas, imports, matching) to this one flow.
+- **Blocker found:** `OPENAI_API_KEY` is **not in `.env.local`** (checked by name only). It was reported immediately; the work continued with a simulated provider.
+- **Model:** `gpt-6-luna`, verified on OpenAI's model page and pricing page on 2026-10-30. It's current, with Structured Outputs and the Responses API, at $0.10 input / $0.50 output per 1M tokens, and it's sent with `reasoning.effort: "none"`.
+  - Rejected `gpt-4.1-mini`: its page marks it "Deprecated".
+  - **Cost bound:** the request body is capped at 12,000 bytes, and byte-level tokenizers produce at most one token per byte, so input is ≤ 12,000 tokens. The worst case measured was 5,328 bytes. Output is capped by `max_output_tokens` 500. The ceiling is ≤ $0.00145 per call and **≤ $0.015 for 10 calls**.
+  - OpenAI doesn't enforce this; the app's allowance does.
+- **Migration** `20261030170000_gate_trips_ai_allowance`:
+  - Before: `migrate status` up to date, and the drift check (migrations vs. DB) showed no difference.
+  - The generated SQL is two `CREATE TABLE` statements (`trips`, `ai_allowances`) plus one `INSERT … ON CONFLICT DO NOTHING` for the `gate-demo` row (max 10). There's no DROP, ALTER, or reset.
+  - Applied with `migrate deploy`. The post-apply diff showed no difference.
+- **Built:**
+  - `lib/trips/options.ts`: the 24 counties (FIPS keys), §3.7 species and methods, and group definitions.
+  - `lib/trips/preferences.ts`: `zod` schemas. Saved preferences hold option values and dates only, are strict (no extra or free-text fields), and require real, ordered dates. It also has the model JSON schema and output re-validation, and code-side group expansion that labels values "from 'deer'".
+  - `lib/trips/ai.ts`:
+    - Inputs of 3–300 chars, with the description delimited as data.
+    - Order of checks: off switch, request-size bound, then the atomic reservation. Then a 10 s abort timeout and handling for refused, incomplete, and invalid output.
+    - Specific failure messages, all pointing to the manual form. No description is logged.
+  - `lib/trips/store.ts`: the atomic `UPDATE … WHERE enabled AND used_calls < max_calls`, plus trip create and get with re-validation on read.
+  - `app/plan/*`: the page, server actions, and a client planner. It shows editable chips, the unresolved terms, and notices about the link visibility, personal information, and the description going to OpenAI and not being saved.
+  - `app/trips/[id]/page.tsx`: request-time read inside `<Suspense>`, `noindex`, and a not-found page for bad or unknown ids.
+  - Plan-a-trip links in the header and on the landing page. `.env.example`: `OPENAI_API_KEY`, `AI_DISABLED`.
+  - `npm install` also pruned 12 extraneous `@clerk/*` packages left over from the auth branch.
+- **Verified (agent):**
+  - Lint, typecheck, and build pass. `/plan` is static and `/trips/[id]` is dynamic.
+  - `scripts/check-gate.ts`, **35/35 pass**:
+    - Persistence: save, then reload from a separate connection, against real Neon.
+    - 8 invalid-input cases.
+    - 3 off-switch paths with no request made.
+    - **7 simulated** provider failures, each consuming exactly one call.
+    - A simulated success with group expansion and unresolved terms.
+    - **10 concurrent reservations against max 3 → exactly 3.**
+    - Exhausted → no request.
+    - The size bound, and the real `gate-demo` row read at 0/10.
+  - Local production server: `/`, `/plan`, `/sources`, and a saved trip all return 200 with the right content; bad ids show "This page could not be found". The status is 200 because of streaming.
+  - The client bundle has 0 matches for the key name, the API host, or `Bearer`.
+- **Synthetic records written:** `trips` rows with `is_synthetic = true` (shown with a "Synthetic test record" label), and `ai_allowances` rows `synthetic-check-failures`, `synthetic-check-race`, and `synthetic-check-off`.
+- **Not verified:** a **real OpenAI call** (no key), the browser UI flow by a person, and deployment. All AI behavior above is simulated.
+- **Not done:** no commit, push, merge, deploy, or Railway change.
+
+### 26. [Claude] Gate demo: final review and one real OpenAI call
+
+- **Asked:** The user added `OPENAI_API_KEY` locally and on Railway.
+  - Verify the key's presence without printing it.
+  - Review the gate changes for blocking issues (server-side validation, atomic reservation, random-link access, secret handling).
+  - Re-verify the model and pricing in OpenAI's docs. Treat the cost estimate as provisional, because request bytes don't establish billable tokens.
+  - Run one real request through the app and confirm exactly one allowance is consumed, without resetting or raising the allowance.
+  - No commit, push, merge, or deploy.
+- **Key:** present in `.env.local` (one line, `sk-` prefix; the value was never printed). The Railway key is user-reported; the agent has no Railway access.
+- **Docs (re-verified 2026-10-30):**
+  - `gpt-6-luna` is the only snapshot, with no deprecation shown. It costs $0.10 input, $0.01 cached input, and $0.50 output per 1M tokens, and supports `reasoning.effort` `none` (the default is `medium`), Structured Outputs, and Responses.
+  - The reasoning guide says reasoning tokens "are billed as output tokens", and that `max_output_tokens` caps all generated tokens "including reasoning tokens".
+  - **Correction to entry 25:** the byte-based input bound isn't a proven token count, because the model adds overhead (instructions, schema rendering). Output is bounded by the 500-token cap.
+- **Review:** no blocking issues found.
+  - Saving re-validates on the server with a strict `zod` schema (enum values and dates only; extra fields rejected). Reads re-validate.
+  - The reservation is one conditional `UPDATE`. It ran before the provider call and was never released. The 10-way concurrency check passes.
+  - Links are `gen_random_uuid()` ids, the page is `noindex`, and there's no listing route.
+  - The key is read only in the server action path.
+  - Non-blocking notes:
+    - `lib/trips/ai.ts` has no `server-only` guard, because the check script imports it.
+    - A very fast double-click could use two calls; the button disables while pending.
+    - The model's unresolved terms are shown escaped and capped at 60 chars, and never saved.
+- **Change:** count-only usage logging in `lib/trips/ai.ts` (status and input/output/reasoning tokens, no prompt or output), per §6.6. Lint, typecheck, build, and `scripts/check-gate.ts` (35/35) re-run and passing. The real allowance was still 0/10 before the real call.
+- **Real call (agent-run, through the app):**
+  - Ran `next start` locally and POSTed to the built `suggestAction` server action (the same path as the button), with a description containing "bow", "deer", "Garrett County", dates, "opening day", and plain "Baltimore".
+  - **Structured output succeeded:** county `24023`, deer → white-tailed + sika, bow → vertical bow + crossbow, and dates 2026-11-14 to 11-16. "opening day" stayed unresolved as a season term, and "Baltimore" as an ambiguous place.
+  - Usage: 1,292 input / 77 output / 0 reasoning tokens, about $0.00017.
+  - **The allowance went from 0 to 1 of 10 (exactly one consumed).**
+  - The test server was stopped by its port PID.
+- **Secret scan (counts only, using the real key value):** 0 occurrences in tracked or untracked files (excluding `.env.local`), `.next/static`, `.next/server`, the server log, and Git history.
+- **Not verified:** the Railway deployment and a browser walk-through.
+- **Not done:** no commit, push, merge, or deploy. No allowance reset or increase.
+
+### 27. [Claude] Gate demo: commit, fast-forward to `main`, push
+
+- **User-reported local evidence (not agent-verified):** in a local browser, a saved trip still shows after refreshing the trip page.
+- **Asked:** Commit the reviewed gate-demo changes as "feat: add AI-assisted hunting trip planner", then on `main` run `pull --ff-only`, `merge --ff-only feat/gate-demo`, and `push origin main` to trigger Railway. Never stage `.env.local`. Stop on any failure or divergence. No force-push, reset, or merging `feat/auth-foundation`.
+- **Railway:** pushing `main` triggers a deploy, but whether it succeeded is **not verified** here. It's checked next.

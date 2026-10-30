@@ -31,3 +31,35 @@ model DataSource {
 
   @@map("data_sources")
 }
+
+// A saved trip plan for the Week 7 gate demo (project-plan.md §9, temporary
+// priority). No accounts: anyone with the random id can view it. Only
+// validated option values and dates are stored, never the raw description
+// or any free text.
+model Trip {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Validated preferences: { counties, species, methods, startDate, endDate }.
+  preferences Json     @db.JsonB
+  // Whether an AI suggestion was used before the user saved.
+  aiAssisted  Boolean  @map("ai_assisted")
+  // True only for records created by automated checks.
+  isSynthetic Boolean  @default(false) @map("is_synthetic")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("trips")
+}
+
+// Durable, shared AI call allowance. A call is reserved atomically
+// (used_calls + 1 where used_calls < max_calls) before contacting the
+// provider, and is never released: failures and timeouts still count.
+model AiAllowance {
+  // "gate-demo" for the app; ids starting "synthetic-" are test records.
+  id        String   @id
+  maxCalls  Int      @map("max_calls")
+  usedCalls Int      @default(0) @map("used_calls")
+  // Off switch that works without a redeploy.
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@map("ai_allowances")
+}
