@@ -215,3 +215,29 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Verified:** all findings come from the doc pages fetched on 2026-10-30. Gaps are marked [VERIFY]. `git diff --check` exit 0. Nothing installed, provisioned, migrated, or committed, and no accounts created.
 - **Not done (deferred, not blocking M1/M2):** DNR website terms (U3, before M3), federal lands, PAD-US, county/municipal hunts, and full storage/maps/email/AI checks in M4, M3, M9, and M6. **M0a is not complete.**
 - **Next:** M1, the app skeleton and deploy. It needs approval before the package install and before the first migration.
+
+### 11. [Claude] M1 (partial): Next.js application foundation
+
+- **Asked:** On `feat/app-foundation` only, set up the app foundation. The user authorized installing Next.js App Router, TypeScript, Tailwind CSS, and ESLint packages. Preserve docs and history. Scaffold in a temp sibling if the directory isn't empty. Use the npm lockfile. Build a simple responsive cream / forest-green landing page with no fake listings or nonfunctional controls. No Prisma, auth, maps, storage, email, or AI packages. No external services, deploy, migrations, or commits. Run lint, typecheck, and build, and record this as partial M1.
+- **Context:** branch confirmed `feat/app-foundation`, clean tree, Node v24.18.0, npm 11.16.0. Official install docs (`nextjs.org/docs/app/getting-started/installation`, lastUpdated 2026-10-02): Node ≥ 20.9. `--yes` defaults to TypeScript, Tailwind, ESLint, App Router, Turbopack, `@/*`, **and an `AGENTS.md`**. `npm view`: next / create-next-app `16.4.3` latest.
+- **Decisions:**
+  - Scaffolded into `../.huntsomewhere-scaffold/huntsomewhere` with `create-next-app@16.4.3 --ts --tailwind --eslint --app --use-npm --import-alias "@/*" --disable-git --no-agents-md --no-agent-feedback --yes`. **`--no-agents-md`** prevents a second `AGENTS.md` conflicting with ours. Defaults kept: Cache Components on, no `src/`, no React Compiler.
+  - Transferred only `.gitignore`, `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, and `app/{layout,page,globals.css}`, after checking that none existed. **Not copied:** the scaffold README (ours kept), any `.git` (none was created), `node_modules`, `.next`, `next-env.d.ts` (generated), starter SVGs, and the default favicon.
+  - Ran `npm ci` from the lockfile, then removed the temp directory.
+  - `.gitignore`: kept the scaffold's `.env*` rule and added `!.env.example`, because the plan's M0b template holds names only.
+  - Added a `typecheck` script (`next typegen && tsc --noEmit`).
+  - Landing page:
+    - header wordmark, forest-green hero, three descriptive cards (hunters, landowners, data honesty), an "In development" note, and a DNR / legality footer;
+    - no links, buttons, forms, or listings;
+    - color tokens in `globals.css` (cream `#f7f3e8`, forest `#1f4d2b`), with a dark-scheme variant;
+    - Geist font only.
+- **Installed (top level):** next 16.4.3, react 19.3.0, react-dom 19.3.0, typescript 5.9.3, tailwindcss 4.3.3, @tailwindcss/turbopack 4.3.3, eslint 9.39.5, eslint-config-next 16.4.3, @types/node 20.19.43, @types/react 19.3.0, @types/react-dom 19.3.0. 357 packages, 0 vulnerabilities.
+- **Warnings noted, not acted on:** npm flags `eslint@9.39.5` as "no longer supported". This is the version `eslint-config-next@16.4.3`'s scaffold pins (`^9`). npm 11 skipped `unrs-resolver@1.12.2`'s postinstall pending `npm approve-scripts`. Lint still passed.
+- **Verified:**
+  - `npm run lint` exit 0. `npm run typecheck` exit 0. `npm run build` exit 0 (Next 16.4.3 Turbopack, `/` and `/_not-found` prerendered static).
+  - `next start` on port 3107 returned HTTP 200 with the HuntSomewhere title, heading, and in-development note. The server was then stopped.
+  - `git check-ignore` confirms `node_modules`, `.next`, `next-env.d.ts`, `.env`, `.env.local`, `.env.production` are ignored, and `.env.example` is allowed.
+  - Tracked docs: no diff.
+  - **Not verified:** visual rendering in a browser at phone width (no browser check was run).
+- **Not done (remaining M1):** Prisma 7 + Neon, Vercel deploy, integration checks, first migration. Nothing committed. Plan updated to rev 8 (header, M1 row partial note, change log).
+- **Next:** finish M1 with Prisma 7 + Neon (needs approval for the Prisma packages and the first migration), then the Vercel deploy.
