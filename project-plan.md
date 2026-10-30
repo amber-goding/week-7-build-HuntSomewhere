@@ -2,7 +2,7 @@
 
 Shared source of truth for Claude Code and Codex. Product scope, decisions, and milestone status live here. The collaboration log lives in [PROMPT-HISTORY.md](PROMPT-HISTORY.md). Agent entry points are [CLAUDE.md](CLAUDE.md) and `AGENTS.md` (§1).
 
-**Last updated:** 2026-10-30 (revision 6) · **Repo state (from `git log` / `git ls-files`, 2026-10-30):** five commits on `main`: `02e2da6` "Initial commit", `eaff8e8` "docs: define HuntSomewhere scope and implementation plan", `d771662` "docs: record Maryland data sources and agent instructions", `14729ad` "docs: clarify source metadata and reuse requirements", `8b09873` "docs: verify Codex shared instruction discovery". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. This revision 6 isn't committed yet.
+**Last updated:** 2026-10-30 (revision 7) · **Repo state (from `git log` / `git ls-files`, 2026-10-30):** six commits on `main`: `02e2da6` "Initial commit", `eaff8e8` "docs: define HuntSomewhere scope and implementation plan", `d771662` "docs: record Maryland data sources and agent instructions", `14729ad` "docs: clarify source metadata and reuse requirements", `8b09873` "docs: verify Codex shared instruction discovery", `59c46a7` "docs: define hunting filters and permission requirements". Tracked files: `README.md`, `CLAUDE.md`, `AGENTS.md`, `PROMPT-HISTORY.md`, this file. No application code. Revision 7 isn't committed yet.
 
 ### Status vocabulary
 
@@ -65,15 +65,15 @@ Provider and library choices are **candidates**. Their capabilities are **[VERIF
 
 | # | Item | Status | Proposed default | Must be confirmed |
 |---|---|---|---|---|
-| D1 | Auth provider | UNRESOLVED | Clerk (alternatives: Neon Auth, Auth.js) | Google + email/password support, production redirect setup, a way to sync users into our DB, free-tier limits |
-| D2 | Maps and tiles | UNRESOLVED | MapLibre GL JS + MapTiler (alternative: Mapbox) | Key restriction by domain, attribution terms, free-tier limits, suitable outdoor style |
-| D3 | Email provider | UNRESOLVED | Resend (alternative: Postmark) | Domain verification needs, whether unverified accounts can send to arbitrary recipients, idempotency-key support, webhook/bounce support |
-| D4 | Hosting | UNRESOLVED | Vercel | Plan terms for this use, env-var handling, scheduled-job support (needed for email retries and reminders) |
-| D5 | Photo and document storage | **UNRESOLVED — not in approved stack; needs approval** | S3-compatible private bucket (Cloudflare R2 or AWS S3) with short-lived presigned URLs | Private access, presigned URL expiry, cost. Signed documents must never be at public URLs. |
+| D1 | Auth provider | **RECOMMENDED (docs reviewed 2026-10-30, §3.9)** | **Clerk.** Fallback: Neon Auth if a domain you own isn't available by M2. Auth.js is dropped (it isn't a managed provider). | Production instance needs a domain you own, DNS records, and your own Google OAuth client (§3.9). Integration check in M2. |
+| D2 | Maps and tiles | PROPOSED (brief review, §3.9). Setup deferred to M3. | MapLibre GL JS + MapTiler | MapTiler Free: "personal, or non-commercial use", logo required, service pauses at the monthly limit. Commercial terms and key domain restriction to be checked in M3. |
+| D3 | Email provider | PROPOSED (brief review, §3.9). Setup deferred to M9. | Resend | `resend.dev` sends only to the account owner's address, so a verified domain is needed. `Idempotency-Key` header, kept 24 h. Free: 100/day, 3,000/month. |
+| D4 | Hosting | **RECOMMENDED (docs reviewed 2026-10-30, §3.9)** | **Vercel**, Hobby for build and presentation | Hobby is "non-commercial, personal use only" (a launch decision). Hobby cron runs at most once per day with ±59 min precision. Function max duration 300 s. |
+| D5 | Photo and document storage | **UNRESOLVED — not in approved stack; needs approval.** Recommendation changed after docs review (§3.9). | **Vercel Blob, private store** (authenticated reads served through our functions, OIDC credentials by default). Fallback: Cloudflare R2 / AWS S3 with presigned URLs. | Private stores serve no public URL. The access mode can't be changed after creation. Setup deferred to M4. |
 | D6 | Geospatial approach | PROPOSED | lat/lng columns + haversine SQL. Display geometry as simplified GeoJSON. PostGIS deferred. | Whether Prisma + Neon handle this adequately; whether PostGIS is needed for county-polygon bounds (§6.1) |
 | D7 | County and town reference data | PROPOSED (sources researched 2026-10-30, §3.5) | Counties: iMAP Political Boundaries – County Boundaries (24 county-equivalents, including Baltimore City). Towns: Census TIGER/Line places for Maryland (incorporated places + CDPs). | Reuse basis and compliance conditions in §3.6. Inspect the 2026 TIGER place file and its terms before adopting it. County-line tolerance set in M4. |
 | D8 | Reconfirmation grace period | **UNRESOLVED (user decision)** | Placeholder 14 days in config | Not blocking. Only the value is open. |
-| D9 | OpenAI model, pricing, spending controls | UNRESOLVED | Smallest model passing the §6.6 evals, structured outputs | Current model list and pricing. **Which spending controls the selected account actually offers — not assumed.** The app's own limits (§6.6) are the enforced control. |
+| D9 | OpenAI model, pricing, spending controls | PROPOSED (brief review, §3.9). Setup deferred to M6. | Responses API with strict JSON-schema structured outputs. Model chosen by the §6.6 evals. | Organization/project spending limits are mentioned in an official OpenAI cookbook article, but their enforcement wasn't verified from official docs. **The app's own limits (§6.6) remain the enforced control.** Refusals arrive in a `refusal` field and must be handled. |
 | D10 | Signed-copy format | PROPOSED | Server-generated PDF from the immutable document version (library chosen at the start of M11) | Library choice, rendering fidelity |
 | D11 | Signature method | PROPOSED | Typed full name + explicit acknowledgment + timestamp, bound to the document content hash | Wording reviewed (§7). No legal-sufficiency claim. |
 | D12 | Token lifetimes | PROPOSED | Signing invitation: 7 days, single use. Document-access link: 30 days, multi-use, revocable (§6.4). | — |
@@ -87,12 +87,12 @@ Provider and library choices are **candidates**. Their capabilities are **[VERIF
 
 | Needed for | Action | Lead-time note |
 |---|---|---|
-| M1 | Neon project, hosting account | — |
-| M2 | Auth provider account, Google OAuth client | — |
+| M1 | Neon project (or Vercel Marketplace Neon integration), Vercel account | — |
+| M2 | Clerk account. **A domain you own** for the Clerk production instance, with DNS access. A Google Cloud OAuth client set to "In production" publishing status. | Clerk: DNS "can take up to 48 hours". Google requires verification of app name, logo, and scopes before "In production". **Start the domain and Google steps during M1.** The same domain can later serve email (M9). |
 | M3 | Map tile key | — |
-| M4 | Storage bucket (after D5 approval) | — |
+| M4 | Vercel Blob private store connected to the project (after D5 approval) | Access mode is fixed at creation, so create it as **private** |
 | M6 | OpenAI API key; review the account's available spending controls | — |
-| M9 | Email provider account and a **sending domain you control** | DNS changes can take time to propagate. Start whenever convenient, but nothing before M9 waits on it. |
+| M9 | Resend account and the **verified sending domain** (can reuse the M2 domain) | Domain verification can take time. Nothing before M9 waits on it. |
 
 Agents never see or commit secret values. They live in `.env.local` (gitignored) and the hosting dashboard.
 
@@ -149,11 +149,11 @@ Allowed writes: `AGENTS.md`, this file, `PROMPT-HISTORY.md`.
 | Town / place reference | M0a | **Working download found (2026-10-30).** Census TIGER/Line 2025 Maryland places: 536 places (157 incorporated + 379 CDPs) with internal points. Explicit Census use statement in the file's metadata. | §3.5, §3.6 | Recommended: Census TIGER/Line places (state 24). Reuse: published TIGER/Line use constraint is the proposed basis (§3.6). |
 | Species and method taxonomy | M0a | **Researched (2026-10-30)** from DNR's *2026–2027 Guide to Hunting & Trapping in Maryland* (a DNR Wildlife and Heritage Service publication, hosted by eRegulations; pages last updated 2026-09-30 to 2026-10-14) and DNR's sika deer page. **White-tailed and sika deer are separate** (separate bag limits, a Sika Deer Stamp, different "antlered" definitions, sika concentrated on the lower Eastern Shore). The guide names eight deer device categories, and rifles and handguns are split by cartridge type with area restrictions. | §3.7 | Recommended filter values and ambiguous-term handling in §3.7. No season-eligibility engine. |
 | MD written-permission requirement | M0a | **Researched (2026-10-30).** Natural Resources §10-411(a) (2026 session text): no one may come to hunt on another person's land "without the written permission of the landowner or the landowner's agent or lessee". **§10-411 does not specify** the form, content, carrying, or electronic signatures. DNR's 2026–2027 guide repeats the requirement for all counties. | §3.8 | Explicit requirements are kept separate from product choices in §3.8. **No claim that our e-signing workflow satisfies the statute.** Legal review is still required. |
-| Provider docs D1–D5, D9 | M0a | Not yet researched | — | — |
+| Provider docs D1–D5, D9 | M0a | **Reviewed (2026-10-30, docs only).** Hosting: Vercel (Hobby is non-commercial only, daily cron only). DB: Neon + Prisma 7 with `DATABASE_URL` / `DATABASE_URL_UNPOOLED` and `@prisma/adapter-neon`, scale-to-zero after 5 min. Auth: Clerk (production needs a domain you own and your own Google OAuth client), Neon Auth fallback. Storage: Vercel Blob private store (new option). Maps / email / AI: brief review only. | §3.9 | D1, D4 recommended. D2, D3, D9 setup deferred to M3, M9, M6. D5 still needs approval. |
 | Codex reads `AGENTS.md` | M0a | **Verified (2026-10-30).** Codex discovered the repo-root `AGENTS.md`, then read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full before work. Claude's `prompt-history` skill is unavailable to Codex; Codex followed the equivalent logging workflow documented in `AGENTS.md`. | Codex report in this session; `PROMPT-HISTORY.md` entry 7 | Keep one shared history file; Codex entries use `[Codex]`. |
 | Integration checks (§3.2) | M1–M9 | Not started | — | — |
 
-**M0a status:** in progress. Done: `AGENTS.md` created and its Codex discovery verified, DNR/iMAP public data, county boundaries, town/place reference, species and method taxonomy, written-permission requirement. Still open: federal hunting lands, PAD-US, county/municipal hunts, provider docs.
+**M0a status:** in progress. Done: `AGENTS.md` created and its Codex discovery verified, DNR/iMAP public data, county boundaries, town/place reference, species and method taxonomy, written-permission requirement. Provider docs for framework setup (hosting, DB, auth) are done. Still open, **all deferred and none blocking M1/M2** (§3.9): DNR website terms (U3, before M3), federal hunting lands, PAD-US, county/municipal hunts, and full storage/maps/email/AI checks in their milestones.
 
 **Reading these findings.** Each source is evaluated on four separate questions, and a "yes" on one never implies the others:
 1. **HTTP availability:** did the endpoint return the expected format on the date checked?
@@ -446,6 +446,95 @@ An owner allowing `rifle_bottleneck` never implies that a bottleneck rifle is le
 L1: Does an electronic record or electronic signature satisfy "written permission" under §10-411? (Maryland's electronic-transactions law was **not reviewed**.) · L2: Does one document covering a party satisfy the requirement for each member? · L3: What evidence of agent or lessee authority is appropriate? · L4: How, if at all, do SB 582 and NR Title 5, Subtitle 11 apply to listings that charge for access? (not reviewed) · L5: Does a permission document need to be carried while hunting?
 
 **Our electronic-signing workflow is not claimed to be legally sufficient.** §6.4 and §7 wording stays as is, and legal review remains required before real-world use (§10, tier L).
+
+### 3.9 Provider documentation review (2026-10-30)
+
+These findings come from reading current official documentation only. No accounts were created and nothing was installed or provisioned. "Doc date" is the page's own last-updated stamp where one is shown. Otherwise it's "no date shown", and the content was read on 2026-10-30. Anything not observed in those docs stays **[VERIFY]** for that milestone's integration check (§3.2).
+
+#### Framework setup (M1–M2): recommended
+
+**Hosting: Vercel (D4).**
+
+| Item | Finding | Source (doc date) |
+|---|---|---|
+| Plan for build and presentation | **Hobby** (free). *"the Hobby plan restricts users to non-commercial, personal use only."* A launch with real users or commercial activity is a **launch-time decision** (likely Pro). Not a blocker for M1. | `https://vercel.com/docs/plans/hobby` (2026-09-14) |
+| Limits that matter | Function max duration 300 s. 100 deployments/day. Runtime logs kept 1 hour. 4 active CPU-hours and 1,000,000 function invocations included per month. When Hobby limits are exceeded, the feature is usually unavailable "until 30 days have passed". | same |
+| Cron | Hobby: **at most once per day**, precision ±59 min. More frequent expressions "will fail deployment". 100 cron jobs per project. | `https://vercel.com/docs/cron-jobs/usage-and-pricing` (2026-07-15) |
+| Plan impact | §6.5 email retries can't use a frequent cron on Hobby. Keep "process the outbox right after commit, plus a manual retry", with at most a daily sweep. Daily reconfirmation reminders (M12) fit a daily cron. | — |
+
+**Database: Neon + Prisma.**
+
+| Item | Finding | Source (doc date) |
+|---|---|---|
+| Prisma version | Neon's guide targets **Prisma ORM 7**. It requires **Node.js 20.19+, 22.12+, or 24+**, and says to pin `prisma`, `@prisma/client`, and `@prisma/adapter-neon` to the same major version (`@7`), because an unpinned install may pull a Prisma 8 prerelease. | `https://neon.com/docs/guides/prisma` (no date shown) |
+| Connections | `DATABASE_URL` = **pooled** (`-pooler` host), for app runtime. `DATABASE_URL_UNPOOLED` = **direct**, for the Prisma CLI (`migrate`, `db push`). In Prisma 7, the schema's datasource has no `url`, and the direct URL goes in `prisma.config.ts`. | same |
+| Driver | `@prisma/adapter-neon` with the pooled URL. The guide says not to install `@neondatabase/serverless` or `ws` separately. | same |
+| Cold starts | Free computes **scale to zero after 5 minutes idle** (this can't be disabled on Free). The resulting P1001 timeouts are handled with `connect_timeout=15` on the connection string. This updates risk R6. | same; `https://neon.com/docs/introduction/plans` (no date shown) |
+| Free plan | 1 GB storage per project, 100 CU-hours per project per month, 10 branches, 5 GB public transfer. Compute suspends when CU-hours or transfer run out. No spending notifications on Free. | plans page |
+| Connecting to Vercel | Three options: Vercel-managed Marketplace integration (single Vercel bill), Neon-managed integration (existing Neon account), or manual env vars. **Both integrations auto-create preview-deployment branches. Manual doesn't.** The env-var names the integrations set aren't stated on the overview page, so they're **[VERIFY] in M1** against the two names above. | `https://neon.com/docs/guides/vercel-overview` (no date shown) |
+| Migrations | Still require explicit user approval (§1). | — |
+
+**Authentication (D1): Clerk recommended, Neon Auth fallback.**
+
+| | **Clerk (recommended)** | Neon Auth (fallback) |
+|---|---|---|
+| Google + email/password | Google via SSO connections. Email/password via dashboard settings ([VERIFY] toggles in M2). | Email/password via `auth.signUp.email()`. Google via OAuth setup (Neon's OAuth guide URL returned 404 on 2026-10-30, so **[VERIFY]**). |
+| Dev vs. production Google | Development uses Clerk's shared credentials. **Production needs your own Google OAuth client.** Google apps start in "Testing" (up to 100 test users), and "In production" status requires Google to verify the app name, logo, and scopes. | Production checklist: create your own Google OAuth app to "replace shared development keys". |
+| Domain / DNS | **Production instance: "You will need to have a domain you own."** DNS records (Frontend API CNAME, or a proxy) "can take up to 48 hours" to propagate. Whether `*.vercel.app` is accepted isn't stated. | Production domains must be added as trusted domains. **A domain you own isn't stated as required.** |
+| Auth emails | Sent by Clerk (doesn't depend on our M9 email provider) | Default shared SMTP is rate-limited and "does not support verification links". Production needs custom SMTP for links (codes work with either). |
+| Where users live | Clerk. We **upsert a local `User` row on first authenticated request**, keyed by Clerk user ID (PROPOSED). Webhooks deferred. | In our Neon database, `neon_auth` schema (no sync needed) |
+| Next.js | `@clerk/nextjs`, `clerkMiddleware()` in **`proxy.ts` on Next.js 16+** (`middleware.ts` on ≤15). `auth()` is async. | `@neondatabase/auth`. Same `proxy.ts` / `middleware.ts` rule. |
+| Free-plan limits | Hobby: "50,000 MRU limit per app", up to 3 social connections, **Clerk branding not removable** | Not stated on the pages read **[VERIFY]**. Release stage not stated. |
+| Docs (read 2026-10-30, no dates shown) | `https://clerk.com/docs/nextjs/getting-started/quickstart`, `https://clerk.com/docs/guides/configure/auth-strategies/social-connections/google`, `https://clerk.com/docs/guides/development/deployment/production`, `https://clerk.com/pricing` | `https://neon.com/docs/auth/overview`, `https://neon.com/docs/auth/quick-start/nextjs`, `https://neon.com/docs/auth/production-checklist` |
+
+**Why Clerk:**
+- Its production path is fully documented for both required sign-in methods.
+- It sends its own auth emails, so M2 doesn't depend on M9.
+- Its Next.js 16 integration is explicit.
+
+**Cost of choosing Clerk:** a domain you own plus DNS lead time, and Google's production verification. Both should start during M1.
+
+**Decision rule [PROPOSED]:** if no domain is available by the start of M2, use Neon Auth instead, with verification **codes** (which work with the shared SMTP) and record the switch. Auth.js is dropped because it isn't a managed provider.
+
+#### Environment-variable names (names only; values never committed)
+
+| Variable | Scope | Set by | Milestone |
+|---|---|---|---|
+| `DATABASE_URL` | server | Neon / integration | M1 |
+| `DATABASE_URL_UNPOOLED` | server (CLI, migrations) | Neon / integration | M1 |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | client (publishable by design) | Clerk | M2 |
+| `CLERK_SECRET_KEY` | server only | Clerk | M2 |
+| `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` | server | Neon Auth | M2, **fallback only** |
+| `BLOB_STORE_ID` (+ `VERCEL_OIDC_TOKEN`, `BLOB_WEBHOOK_PUBLIC_KEY`, set automatically) | server | Vercel when a store is connected | M4 |
+| `BLOB_READ_WRITE_TOKEN` | server, **only** for off-Vercel code or client-upload tokens | Vercel | M4 if needed |
+| Map key (name chosen in M3) | client (domain-restricted) | MapTiler | M3 |
+| `OPENAI_API_KEY` (conventional name, [VERIFY] in M6) | server only | OpenAI | M6 |
+| `RESEND_API_KEY` (conventional name, [VERIFY] in M9) | server only | Resend | M9 |
+
+App-defined (not provider) variables, like the AI kill switch, budget caps, and the demo flags (§6.6, §6.8), are named when introduced in their milestones. M0b's `.env.example` lists names only.
+
+#### Deferred providers: brief evaluation (setup in their milestones)
+
+| Area | Candidate | Key findings | Source (doc date) | Setup |
+|---|---|---|---|---|
+| Storage (D5) | **Vercel Blob, private store** (recommendation changed from R2/S3) | Private store: reads require a token and are delivered "through your Functions". Fits §6.4 signed copies and private photos. OIDC by default, so no long-lived secret. The access mode **can't be changed** after the store is created. Still needs approval, since it isn't in the approved stack. | `https://vercel.com/docs/vercel-blob` (2026-08-26) | M4 |
+| Maps (D2) | MapLibre GL JS + MapTiler | Free: "Suitable for testing, PoC, prototyping, personal, or non-commercial use". MapTiler logo required. Monthly session and request caps, and service "will pause until the next month". Commercial use is a launch decision. | `https://www.maptiler.com/cloud/pricing/` (no date shown) | M3 |
+| Email (D3) | Resend | The `resend.dev` test domain only delivers to the account's own address, so a verified domain is needed. `Idempotency-Key` header, keys kept **24 hours**: the same payload returns the original response without re-sending, and a different payload returns `409`. This is consistent with C2 (§9). Free: 100/day, 3,000/month. 10 requests/s. | `https://resend.com/docs/dashboard/emails/idempotency-keys`, `https://resend.com/docs/knowledge-base/account-quotas-and-limits`, `https://resend.com/docs/knowledge-base/403-error-resend-dev-domain` (no dates shown) | M9 |
+| AI (D9) | OpenAI Responses API | Strict structured outputs via `text.format` `json_schema` with `"strict": true`. Refusals return a `refusal` field that may not match the schema, so they must be handled as a failure state (§6.6). Spending-limit enforcement wasn't verified from official docs, so the app's limits stay authoritative. | `https://developers.openai.com/api/docs/guides/structured-outputs` (no date shown; first ~100k chars read) | M6 |
+
+#### M0a: what's done and what's deferred
+
+| Item | Blocks framework setup (M1–M2)? | Status / deferral |
+|---|---|---|
+| `AGENTS.md`, Codex discovery | — | Done |
+| DNR/iMAP WMA source, counties, places, reuse terms | No (needed by M3/M4) | Done, apart from the open items U3 and U5 (§3.6) |
+| Taxonomy, written permission | No (needed by M4/M5/M11) | Done (§3.7, §3.8) |
+| Provider docs: hosting, DB, auth | **Yes** | **Done (this section)** |
+| Provider docs: storage, maps, email, AI | No | Brief review done. Full checks deferred to M4, M3, M9, M6. |
+| DNR website terms (U3) | No | **Deferred to before M3** relies on DNR page quotes |
+| Federal hunting lands, PAD-US, county/municipal hunts | No | **Deferred.** They expand public-data coverage after the M3 WMA import (§3.4). Coverage stays labeled as not complete. |
+
+**M0a is not complete.** The deferred rows above stay open. None of them block M1 or M2.
 
 ---
 
@@ -875,7 +964,8 @@ Arithmetic, P: low 1.5+0.5+1.5+1.5+2.5+3+2+2+2.5+1+1.5 = 19.5; high 2.5+1+2.5+2.
 | R3 OAuth fails on the production domain | Integration check in M2, in production immediately. |
 | R4 Scope exceeds time | Ordered reductions above. Honest status labels. |
 | R5 AI slow or failing live | M6 evals and failure paths, kill switch, manual search always works. |
-| R6 Database connection or cold-start issues | Check pooling options in M1 ([VERIFY]). Warm the app before presenting. |
+| R6 Database connection or cold-start issues | Neon Free scales to zero after 5 min idle (§3.9). Use the pooled `DATABASE_URL` with `connect_timeout=15`. Warm the app before presenting. |
+| R9 Clerk production blocked by domain / DNS / Google verification lead time | Start the domain, DNS, and Google OAuth steps during M1 (§2.3). If no domain by M2, use the Neon Auth fallback (§3.9 decision rule). |
 | R7 Live change breaks the demo | Make it on a branch or preview deployment, never directly on production. |
 | R8 Private location leak | Allowlist DTOs, prompt-builder and DTO tests (M4, M6), location-reviewer scoping. |
 
@@ -926,6 +1016,15 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
 
 ## 11. Change log
 
+- 2026-10-30, rev 1: initial plan by Claude from the user's brief.
+- 2026-10-30, rev 2: user-requested correction pass. M0 split into read-only research plus per-milestone integration checks. AI NL→filters moved onto the critical path before signing, with ≥3 real testers. Totals recalculated as provisional. Single versioned listing review with a scoped location reviewer. Immutable agreement snapshots and amendments. Three separate document status fields with atomic finalization. Separate document-access tokens and defined guest-signer view. Email outbox with idempotency ahead of signing. App-enforced AI budget, quote-level citation validation, and acceptance checks for all four AI features. Conservative handling of ambiguous search input and distance bounds. Isolated demo flow with an authenticated demo-only fallback. Unverified provider and machine claims reworded as [VERIFY] or dated observations.
+- 2026-10-30, rev 3: M0a started. `AGENTS.md` created (Codex verification pending). DNR/iMAP public-data findings recorded (§3.3–3.4): the iMAP `MD_ProtectedLands` layer 0 WMA subset is the initial source, the DNR Hunting Atlas service was not found, the dataset doesn't identify hunting access, and reuse terms aren't explicit. Implementation cautions C1–C3 added, with fixes to §4.3 (immutable versions, hash-bound approvals), §6.5 (retry-stable token links), and §6.6 (timeouts count as spent).
+- 2026-10-30, rev 4: Removed the unsupported conclusion that unclear reuse terms were "fine for the presentation with attribution". Reuse permission is recorded as UNRESOLVED. The official iMAP catalog item for the DNR lands layer was found, and its `licenseInfo` contains an explicit distribution / derived-data grant, kept separate from its no-warranty disclaimer. Pending user acceptance, so no written letter is assumed. HTTP availability, content accuracy, freshness, and reuse are now recorded as separate questions. Added §3.5: county boundaries (recommended iMAP Political County Boundaries, Baltimore City as FIPS `24510`) and town/place reference (recommended Census TIGER/Line Maryland places, which has an explicit Census use grant). D7 updated.
+  - **Rev 4 correction (same day):**
+    - Header corrected to revision 4, with repo state taken from `git log` (3 commits).
+    - Removed "pending user acceptance" as the reuse blocker, superseding the "pending user acceptance" wording above. The published iMAP and Census terms are now the proposed basis.
+    - Added §3.6: verbatim terms, compliance conditions R1–R8, and open interpretations U1–U5. R1 requires an unmodified, hashed copy of the source metadata stored with each import, and states that a catalog hyperlink alone isn't treated as sufficient.
+    - §6.2 import record updated to match.
 - 2026-10-30, rev 5: Codex instruction discovery verified. Recorded that Codex found the repo-root `AGENTS.md` and read `CLAUDE.md`, `project-plan.md`, and `PROMPT-HISTORY.md` in full. Documented the existing `[Codex]` logging workflow as the equivalent for Claude's unavailable `prompt-history` skill; no duplicate history file was created. M0a remains in progress because the other research rows are still open.
 - 2026-10-30, rev 6: Header corrected to five commits per `git log`. Added §3.7: species and equipment taxonomy from DNR's 2026–2027 guide, with white-tailed vs. sika deer separated, cartridge-based rifle and handgun values, an ambiguous-term table, and a five-concept separation table. Added §3.8: NR §10-411 written-permission requirements quoted from the 2026 session statute text, kept separate from proposed product choices P1–P6 and open legal questions L1–L5, with no sufficiency claim. §3.3 rows and M0a status updated.
   - **Rev 6 correction (same day):** §3.7:
@@ -937,12 +1036,11 @@ Tier **P** = presentation path · **S** = stretch (after the M8 checkpoint) · *
     - Absence claims reworded as "§10-411 does not specify…" or "not established by the sources reviewed". The full (c) quote is kept, with no liability promise.
     - The E7 safety-distance summary was removed.
     - P1 separates capacity (landowner / agent / lessee) from organization type (individual / hunting club).
-- 2026-10-30, rev 1: initial plan by Claude from the user's brief.
-- 2026-10-30, rev 2: user-requested correction pass. M0 split into read-only research plus per-milestone integration checks. AI NL→filters moved onto the critical path before signing, with ≥3 real testers. Totals recalculated as provisional. Single versioned listing review with a scoped location reviewer. Immutable agreement snapshots and amendments. Three separate document status fields with atomic finalization. Separate document-access tokens and defined guest-signer view. Email outbox with idempotency ahead of signing. App-enforced AI budget, quote-level citation validation, and acceptance checks for all four AI features. Conservative handling of ambiguous search input and distance bounds. Isolated demo flow with an authenticated demo-only fallback. Unverified provider and machine claims reworded as [VERIFY] or dated observations.
-- 2026-10-30, rev 3: M0a started. `AGENTS.md` created (Codex verification pending). DNR/iMAP public-data findings recorded (§3.3–3.4): the iMAP `MD_ProtectedLands` layer 0 WMA subset is the initial source, the DNR Hunting Atlas service was not found, the dataset doesn't identify hunting access, and reuse terms aren't explicit. Implementation cautions C1–C3 added, with fixes to §4.3 (immutable versions, hash-bound approvals), §6.5 (retry-stable token links), and §6.6 (timeouts count as spent).
-- 2026-10-30, rev 4: Removed the unsupported conclusion that unclear reuse terms were "fine for the presentation with attribution". Reuse permission is recorded as UNRESOLVED. The official iMAP catalog item for the DNR lands layer was found, and its `licenseInfo` contains an explicit distribution / derived-data grant, kept separate from its no-warranty disclaimer. Pending user acceptance, so no written letter is assumed. HTTP availability, content accuracy, freshness, and reuse are now recorded as separate questions. Added §3.5: county boundaries (recommended iMAP Political County Boundaries, Baltimore City as FIPS `24510`) and town/place reference (recommended Census TIGER/Line Maryland places, which has an explicit Census use grant). D7 updated.
-  - **Rev 4 correction (same day):**
-    - Header corrected to revision 4, with repo state taken from `git log` (3 commits).
-    - Removed "pending user acceptance" as the reuse blocker, superseding the "pending user acceptance" wording above. The published iMAP and Census terms are now the proposed basis.
-    - Added §3.6: verbatim terms, compliance conditions R1–R8, and open interpretations U1–U5. R1 requires an unmodified, hashed copy of the source metadata stored with each import, and states that a catalog hyperlink alone isn't treated as sufficient.
-    - §6.2 import record updated to match.
+- 2026-10-30, rev 7: Provider documentation review (§3.9).
+  - Vercel recommended (Hobby is non-commercial only, daily cron only).
+  - Neon + Prisma 7 (`DATABASE_URL` pooled / `DATABASE_URL_UNPOOLED` direct, `@prisma/adapter-neon`, scale-to-zero after 5 min).
+  - Clerk recommended for auth (production needs a domain you own and your own Google OAuth client), with a Neon Auth fallback decision rule. Auth.js dropped.
+  - D5 recommendation changed to a Vercel Blob private store (still needs approval). Maps, email, and AI briefly reviewed, with setup deferred.
+  - Env-var names table added. §2.3 user actions, R6 updated, R9 added. M0a deferrals listed, and M0a stays open.
+  - Header corrected to six commits.
+  - Change log reordered chronologically: rev 5 and rev 6 had been listed above rev 1.

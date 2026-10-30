@@ -173,3 +173,45 @@ Maintained by the `prompt-history` skill (opted in via [CLAUDE.md](CLAUDE.md)). 
 - **Done:** `project-plan.md` §3.7 body, §3.8, the §3.3 permission row, the §6.1 ambiguity bullet, the §6.6 acceptance check, and a change-log note under rev 6.
 - **Verified:** `git diff --check` was run (result reported to the user). No new sources were consulted, and all content comes from the sources already recorded in entry 8.
 - **Not done:** nothing installed, migrated, or committed. The remaining M0a rows are unchanged.
+
+### 10. [Claude] M0a: provider documentation review
+
+- **Asked:** Review current official docs to prepare app setup. Priority on Vercel, Neon + Prisma, and managed auth with Google + email/password. Record setup requirements, env-var names only, plan restrictions, and dated links. Briefly evaluate maps, email, storage, and OpenAI, deferring their setup. Identify deferrable research without marking M0a complete. No accounts, installs, provisioning, code, migrations, or commits.
+- **Findings (official docs read 2026-10-30; doc dates where shown):**
+  - **Vercel:**
+    - Hobby (2026-09-14): "non-commercial, personal use only", 300 s function max.
+    - Cron (2026-07-15): Hobby runs at most **once per day** with ±59 min precision.
+  - **Neon + Prisma:**
+    - The guide targets Prisma 7 (Node 20.19+/22.12+/24+, pin all three packages at `@7`).
+    - Connections: `DATABASE_URL` pooled for runtime, `DATABASE_URL_UNPOOLED` direct for CLI and migrations, `@prisma/adapter-neon`, `connect_timeout=15` for cold starts.
+    - Free plan: scale-to-zero after 5 min can't be disabled. 1 GB, 100 CU-hours per project.
+    - Marketplace integrations create preview branches, and manual setup doesn't. The env names the integrations set weren't stated ([VERIFY] in M1).
+  - **Clerk:**
+    - `@clerk/nextjs`, `clerkMiddleware()` in `proxy.ts` on Next.js 16+.
+    - Env: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`.
+    - Development uses shared Google credentials. **Production needs your own Google OAuth client** (Google "In production" status requires app verification) **and "a domain you own"** (DNS up to 48 h).
+    - Hobby: 50,000 MRU, branding not removable.
+  - **Neon Auth:**
+    - Managed Better Auth, users in the `neon_auth` schema. `@neondatabase/auth`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`. Email/password is shown.
+    - Production needs trusted domains, custom SMTP for verification links (codes work with the shared SMTP), and its own Google OAuth app.
+    - The OAuth guide URL returned 404. MAU limits and release stage were not stated.
+  - **Vercel Blob (2026-08-26):** **private stores** exist, with authenticated reads through our functions and OIDC by default. The access mode is fixed at creation.
+  - **MapTiler Free:** non-commercial, logo required, service pauses at the monthly limit.
+  - **Resend:** `resend.dev` sends only to the owner's address. `Idempotency-Key` kept 24 h (a different payload returns 409). Free: 100/day, 3,000/month.
+  - **OpenAI:** strict `json_schema` via `text.format` in the Responses API, refusals in a `refusal` field. Spending-limit enforcement was only described by third parties, so it isn't relied on.
+- **Decisions (proposed):**
+  - **Vercel** (Hobby for build and presentation, plan for launch decided later) + **Neon via a Marketplace integration** + **Prisma 7**.
+  - **Clerk** for auth, with a local `User` upserted on first authenticated request.
+  - Decision rule: if no domain by M2, switch to Neon Auth with verification codes. Auth.js dropped.
+  - D5 now recommends a **Vercel Blob private store** (approval still needed).
+  - Email retries stay "after commit + manual", because Hobby cron is daily.
+- **Redirection:** the change log had rev 5 and rev 6 listed above rev 1. It was reordered chronologically, with no content changes.
+- **Done:** `project-plan.md` rev 7:
+  - new §3.9 (provider findings, env-var names, deferred-provider evaluation, M0a done/deferred table);
+  - D1–D5 and D9 rows, §2.3 user actions;
+  - §3.3 provider row, M0a status;
+  - R6 updated, R9 added;
+  - header (six commits) and change log.
+- **Verified:** all findings come from the doc pages fetched on 2026-10-30. Gaps are marked [VERIFY]. `git diff --check` exit 0. Nothing installed, provisioned, migrated, or committed, and no accounts created.
+- **Not done (deferred, not blocking M1/M2):** DNR website terms (U3, before M3), federal lands, PAD-US, county/municipal hunts, and full storage/maps/email/AI checks in M4, M3, M9, and M6. **M0a is not complete.**
+- **Next:** M1, the app skeleton and deploy. It needs approval before the package install and before the first migration.
